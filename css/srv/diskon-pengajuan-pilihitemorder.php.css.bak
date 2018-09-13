@@ -1,0 +1,9 @@
+
+.div-display, .div-img-display{display:none !important}
+
+.munculkan-span{
+	display:block !important;
+	margin-top:7px;
+}
+
+.diskon-diterapkan{background-color:#ffff80}

@@ -1,0 +1,47 @@
+<div class="item-paket bg-#kelas#" id="daftarpaket_#item_seq#_#paketid#">
+	<div id="div_container_#diskonid#" class="#diskon-diterapkan#">
+		<div class="item item-tambahan"><a class="div-display" href="javascript:void(0)" id="b_item_#item#_#item_seq#" onclick="hapus_item('#item_seq#')"><strong>[X]</strong></a> #itemdesc#<!--<br />#item#-->
+			<span class="div-stok" style="font-weight:normal !important">(Sisa Stok : #stok# unit) </span><span style="display:#display-gudang-non-lokal#">Gudang Non-Lokal #gudang#</span>
+			<!--<span class="div-stok" style="font-size:medium !important; font-weight:normal !important"><br />Stok Lokal : #stok# unit</span>
+			<span style="#display-reward-non-diskon#; font-weight:medium"><br /><img src="images/gift-512.png" style="border:none;height:21px; margin-right:7px" />#reward-non-diskon#</span>-->			
+		</div>
+		<div style="padding:1px 0px 1px 0px; vertical-align:middle; text-align:right; line-height:21px; font-weight:bold">
+			<a  class="div-display" href="javascript:void(0)" id="b_ubah_qty_#item#_#item_seq#" onclick="ubah_kuantitas('#item_seq#', '#kuantitas#')">#kuantitas# Unit</a> <span class="text-kuantitas">#kuantitas# Unit</span> x Rp#harga# = Rp#subtotal#<br />
+			<a href="javascript:void(0)" onclick="ubah_diskon_item('#order_id#', #item_seq#)" style="color:blue">Diskon Campaign (-) Rp#diskon# </a><br />
+			<strong>Sub Total Rp#subtotal_diskon#</strong>	
+		</div>
+		<!--<div style="display:#display_button_ubah_diskon#; padding:5px 0px 13px 0px; vertical-align:middle">
+			<img src="images/edit.png" />&nbsp;<a href="javascript:void(0)" onclick="ubah_diskon_item(1, #item_seq#)" style="color:blue">Ubah Diskon</a> | 
+			<img src="images/reset.png" />&nbsp;<a href="javascript:void(0)" onclick="ubah_diskon_item(0, #item_seq#)" style="color:blue">Reset Diskon</a>
+			<input type="button" name="b_ubah_diskon_#item_seq#" id="b_ubah_diskon_#item_seq#" onclick="ubah_diskon_item(1, #item_seq#)" value="Ubah Default Diskon" /> | 
+			<input type="button" name="b_reset_diskon_#item_seq#" id="b_reset_diskon_#item_seq#" onclick="ubah_diskon_item(0, #item_seq#)" value="Reset Diskon" />
+		</div><strong>Sub Total Rp#subtotal_diskon#</strong>	-->
+				
+			<div style="width:100%; padding-left:0px">
+				<div style="padding:0px; width:100%; text-align:left; " class="div-img-display"><a href="javascript:void(0)" onclick="lihat_campaign(#item_seq#)">[DETAIL]</a><img style="display:none"src="images/down.png" id="img_detail_campaign_#item_seq#" onclick="lihat_campaign(#item_seq#)" /></div>
+				<div style="display:none; padding-left:0px; width:100%; padding-top:3px; margin-top:0px" id="detail_campaign_#item_seq#" class="div-kontainer-info-campaign">
+					<!--<div class="div-display" style="font-size:medium !important; font-weight:normal; padding:0px; padding-bottom:11px">
+						<input type="button" id="b_ubah_qty_#item#_#item_seq#" onclick="ubah_kuantitas('#item_seq#', '#kuantitas#')" style="margin-top:7px;" value="Ubah Kuantitas" /> | 
+						<input type="button" id="b_item_#item#_#item_seq#" onclick="hapus_item('#item_seq#')" value="Hapus Item" />
+					</div>-->
+					Campaign #paket#
+					<span class="div-display">
+						<br />
+						<input type="button" id="b_paket_#item#_#item_seq#" onclick="hapus_campaign('#item_seq#')" value="Hapus Campaign" />
+					</span>
+				</div>				
+			</div>		
+		<span class="munculkan-span" style="display:none">
+			#data-tambahan-diskon#
+		</span>
+		<span class="munculkan-span" style="display:none">
+			<input type="checkbox" name="b_cb_#item_seq#" id="b_cb_#item_seq#" value="#item_seq#" #disabled# #checked-cb# onclick="munculkan_isian_kuantitas(this, '#item_seq#');ubah_warna(#diskonid#)" />
+			<label for="b_cb_#item_seq#">Terapkan tambahan diskon.</label>
+			<div style="display:#display-kuantitas-diskon-item#" id="kontainer_q_#item_seq#">
+				<br />Diskon untuk 
+				<input type="number" name="q_#item_seq#" id="q_#item_seq#" value="#kuantitas_diskon_item#" style="width:57px" onfocus="fokusinput(this)" onKeyPress="return numbersonly(this, event)" /> unit.
+				<input type="hidden" name="q_copy_#item_seq#" id="q_copy_#item_seq#" value="#kuantitas#" />
+			</div>
+		</span>
+	</div>
+</div>

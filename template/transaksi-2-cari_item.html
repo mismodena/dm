@@ -1,0 +1,26 @@
+<script>
+function bukatutup_kontainer_cari_item_bantuan( mode ){
+	var obj = document.getElementById('kontainer_cari_item_bantuan');
+	var disp = 'none'
+	if( mode==1 ) disp = 'block'
+	obj.style.display = disp
+}
+
+function cari_item(){
+	location.href = '#url#&item=' + document.getElementById('item').value
+}
+</script>
+<div style="float:right; width:50%; text-align:right">
+Cari item di daftar order :
+<input type="text" name="item" id="item" value="#item#" /><input type="button" name="b_cari_item" id="b_cari_item" value="Cari Item" onclick="cari_item()" /> | 
+<input type="button" name="b_help_cari_item" id="b_help_cari_item" value="[?] bantuan" onclick="bukatutup_kontainer_cari_item_bantuan(1)" />
+<div id="kontainer_cari_item_bantuan" style="display:none; margin-top:17px; padding:7px; background-color:#EEE; border:solid 1px #CCC; float:right">
+	<a href="javascript:bukatutup_kontainer_cari_item_bantuan(0)" style="float:right; text-align:right; padding-bottom:7px">[x] Tutup</a>
+	<div style="float:left; text-align:left; width:100%">
+		&raquo; Masukkan kata kunci nama item, secara sebagian ataupun lengkap.<br />Contoh untuk mencari BH 1945, masukkan kata kunci "1945" ataupun secara lengkap "BH 1945" (tanpa tanda kutip).<br />
+		&raquo; Untuk mencari lebih dari satu kata kunci nama item, gunakan karakter koma (,) untuk memisahkan antara kata kunci.<br />
+		Contoh untuk mencari item BH 1945 dan VC 1500, gunakan kata kunci "1945, VC 1500" (tanpa tanda kutip)
+		&raquo; Untuk memunculkan semua item, hapus kata kunci yang ada di isian pencarian nama item.
+	</div>
+</div>
+</div>

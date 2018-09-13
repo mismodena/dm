@@ -1,0 +1,25 @@
+
+.div-display, .div-img-display{display:none !important}
+
+.munculkan-span{
+	display:block !important;
+	margin-top:7px;
+}
+
+.diskon-diterapkan{background-color:#ffff80}
+
+.div-display-tambahan-diskon-diterapkan-1, .div-display-tambahan-diskon-diterapkan-2{
+	padding:3px;
+	border:solid #CCC 1px;
+	padding-bottom:0px !important;
+	margin-bottom:13px !important;
+	background-color:green !Important;
+	color:#FFF !important;
+}
+.div-display-tambahan-diskon-diterapkan-1{
+	background-color:#EEE;
+}
+
+.div-display-tambahan-diskon-diterapkan-2{
+	background-color:#FFF;
+}

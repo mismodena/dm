@@ -1,0 +1,30 @@
+<div class="item-non-paket bg-#kelas#">
+	<div id="div_container_#diskonid#" class="#diskon-diterapkan#">
+		<div class="item item-tambahan"><a class="div-display" href="javascript:void(0)" id="b_item_#item#_#item_seq#" onclick="hapus_item('#item_seq#')"><strong>[X]</strong></a> #itemdesc#<!--<br />#item#-->
+			<span class="div-stok" style="font-weight:normal !important">(Sisa Stok : #stok# unit) </span><span style="display:#display-gudang-non-lokal#">Gudang Non-Lokal #gudang#</span>
+		</div>
+		<!--<span class="div-stok">Stok Lokal : #stok# unit<br /></span>-->
+		<!--<span  class="div-display"> 
+			<input type="button" id="b_ubah_qty_#item#_#item_seq#" onclick="ubah_kuantitas('#item_seq#', '#kuantitas#')" style="margin-top:7px;" value="Ubah Kuantitas" /> | 
+			<input type="button" id="b_item_#item#_#item_seq#" onclick="hapus_item('#item_seq#')" value="Hapus Item" />
+		</span>	-->
+		<div style="font-weight:bold; padding:0px 0px 7px 0px; text-align:right"><a class="div-display" href="javascript:void(0)" id="b_ubah_qty_#item#_#item_seq#" onclick="ubah_kuantitas('#item_seq#', '#kuantitas#')">#kuantitas# Unit</a> <span class="text-kuantitas">#kuantitas# Unit</span> x Rp#harga# = Rp#subtotal#</div>
+		<div style="padding:3px 0px 3px 0px; display:#btn_display#">
+		<a href="javascript:void(0)" onclick="munculkan_campaign(#item_seq#)">CAMPAIGN</a> :<div style="padding:0px; display:none" id="saran_campaign_#item_seq#">#saranpaket#<br />
+		<input type="button" id="b_non_paket_#item#_#item_seq#" onclick="terapkan_campaign('#item#','#item_seq#')" value="Terapkan Campaign" style="display:#btn_display#; margin-top:7px" />
+			</div>
+		</div>
+		<span class="munculkan-span" style="display:none">
+			#data-tambahan-diskon#
+		</span>
+		<span class="munculkan-span" style="display:none">
+			<input type="checkbox" name="b_cb_#item_seq#" id="b_cb_#item_seq#" value="#item_seq#" #disabled# #checked-cb# onclick="munculkan_isian_kuantitas(this, '#item_seq#');ubah_warna(#diskonid#)" />
+			<label for="b_cb_#item_seq#">Terapkan tambahan diskon.</label>
+			<div style="display:#display-kuantitas-diskon-item#" id="kontainer_q_#item_seq#">
+				<br />Diskon untuk 
+				<input type="number" name="q_#item_seq#"  id="q_#item_seq#" value="#kuantitas_diskon_item#" style="width:57px" onfocus="fokusinput(this)" onKeyPress="return numbersonly(this, event)" /> unit.
+				<input type="hidden" name="q_copy_#item_seq#" id="q_copy_#item_seq#" value="#kuantitas#" />
+			</div>
+		</span>
+	</div>
+</div>

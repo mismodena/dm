@@ -1,0 +1,13 @@
+#note-awal strong, #detail-note strong{
+	font-size:1.5em;
+}
+
+.readonly-input{
+	width:100%;
+}
+
+.checkbox_terapkandiskon, #b_periksa_order, .header-form-order{display:none}
+
+.kuning, .biru{border:none; }
+.kuning{background-color:#ffff80; border:solid 1px #808000;}
+.biru{background-color:#80ffff; border:solid 1px #008080;}

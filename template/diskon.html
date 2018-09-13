@@ -1,0 +1,32 @@
+<div class="item-order bg-#kelas#" >
+	<div id="div_container_#diskonid#" class="#diskon-diterapkan#">
+		<div style="float:left; margin-bottom:3px; width:100%"><strong style="text-decoration:underline">#diskon-label#</strong>&nbsp;#diskon-label-keterangan#</div>	
+		<input type="text" name="t_disc_#diskonid#" id="t_disc_#diskonid#" value="#diskon#" class="readonly-input" style="display:#display-nilai-diskon#" #readonly-disc#
+			onfocus="fokusinput(this)" onblur="unfokusinput(this)"  />
+			
+		<input type="button" name="b_item_#diskonid#" id="b_item_#diskonid#" value="Pilih Item ORDER" class="#opsi_tampilan-pilih-item# kuning" onclick="pilih_item(#diskonid#)" style="float:right; margin:5px 0px 0px 0px" />
+		<input type="button" name="b_item_#diskonid#" id="b_item_#diskonid#" value="Pilih Item FREE" class="#opsi_tampilan-pilih-free# biru" onclick="pilih_item_free(#diskonid#)" style="float:right; margin:0px 0px 0px 0px" />
+		
+		<div class="daftar_item" style="float:left; width:100%">
+			#daftar_item#
+			<input type="hidden" name="hd_item_#diskonid#" id="hd_item_#diskonid#" />
+		</div>
+		
+		<div class="keterangan_diskon">
+			<div style="float:left; margin-top:1px">Keterangan (max 50 karakter)</div>
+			<textarea name="t_discket_#diskonid#" id="t_discket_#diskonid#" class="readonly-input" style="height:47px">#diskon-keterangan#</textarea>
+		</div>
+		<div class="daftar_lampiran">
+			Lampiran<br />
+			<input type="file" name="f_#diskonid#" id="f_#diskonid#" value="Pilih Data" style="width:100%; margin-top:7px" />
+			<div style="display:#display_lampiran#"><a href="javascript:window.open('#url_lampiran#'); void(0)">#data_lampiran#</a></div>
+		</div>
+		#persetujuan-melalui#
+		
+		<div class="checkbox_terapkandiskon" style="border-top:1px; margin-top:3px">
+			<input type="checkbox" name="cb_#diskonid#" id="cb_#diskonid#" value="#diskonid#" #checked-cb# onclick="ubah_warna(#diskonid#)" />
+			<label for="cb_#diskonid#">Terapkan tambahan diskon.</label>
+		</div>
+		
+	</div>
+</div>

@@ -1,0 +1,7 @@
+.div-display{
+	display:none;
+}
+
+.div-stok, .peringatan, .div-img-display{display:none;}
+
+.div-kontainer-info-campaign{display:block !important}

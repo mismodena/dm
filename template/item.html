@@ -1,0 +1,22 @@
+<div class="item-order bg-#kelas#"  style="padding-bottom:1px !important; padding-top:1px !important; padding-right:7px">
+	<div class="item" style="margin-top:7px; padding:0px !important; padding-bottom:1px; width:100%; float:left">
+		<div style="padding-bottom:0px; padding-top:0px; float:left;width:40%; text-align:left">#itemdesc# </div>
+		<div style="padding-bottom:0px; padding-top:0px; width:40%;float:right; text-align:right">NET Rp#harga#</div>
+		<!--<div style="padding-bottom:0px; padding-top:0px; font-weight:normal !important;float:left;text-align:left">Stok Lokal / Pusat : #stok_lokal# / #stok_pusat# Unit</div>-->
+	</div><!--<br />#item#-->
+	<div style="padding:7px; padding-top:3px">			
+		<div class="sembunyikan" style="padding:0px !important; margin-bottom:7px">Promo Campaign :<br />#saranpaket#</div>
+	</div>
+	<div style="padding:7px; padding-top:3px">			
+		<div>Order item <input type="number" id="q_#item#" value="#qty#" style="width:57px" #disabled# onfocus="javascript:select()" onKeyPress="return numbersonly(this, event)" /> unit dari gudang : 
+		</div>
+		<div style="text-align:right; width:100%">				
+				<input type="button" id="b_#item#" onclick="beli('#item#', '#gudang_lokal#', 'qty_#item#')" style="width:49%;" value="#gudang_lokal# (#stok_lokal# unit)" #disabled_lokal# />		
+				<input type="button" id="b_#item#" onclick="beli('#item#', 'GDGPST', 'qtyp_#item#')" style="width:49% " value="Pusat (#stok_pusat# unit)" #disabled_pusat# />
+				<input type="button" id="b_#item#" onclick="gudang_lain('#order_id#','#item#')" style="width:99% ; margin-top:15px" value="Cek Gudang Lain"  />
+		</div>
+		<input type="hidden" id="harga_#item#" value="#harga_unformatted#" />
+		<input type="hidden" id="qty_#item#" value="#stok_lokal#" />
+		<input type="hidden" id="qtyp_#item#" value="#stok_pusat#" />
+	</div>
+</div>

@@ -1,0 +1,186 @@
+var title = 'Transaksi Penjualan -  Daftar Item';
+
+function hapus_order(i){
+	if(  confirm('Batalkan order dan kembali ke daftar dealer ?') )
+		location.href='transaksi-2.php?c=hapus_order&order_id=' + i
+	else return false
+}
+
+function hapus_item(i){
+	if(  confirm('Hapus item ?') )
+		location.href='transaksi-2.php?c=hapus_item&item_seq=' + i
+	else return false
+}
+
+function hapus_campaign(i){
+	if(  confirm('Hapus campaign untuk item tersebut ?') )
+		location.href='transaksi-2.php?c=hapus_campaign&item_seq=' + i
+	else return false
+}
+
+function terapkan_campaign(id, i){
+	var paket = document.getElementsByTagName('input');
+	var sel_paket = '';
+	for( var x=0; x<paket.length; x++){
+		if( paket[x].type == 'radio' && paket[x].name == 'r_' + i &&  paket[x].checked){
+			sel_paket = paket[x].value;
+			break;
+		}
+	}
+	if( sel_paket == '' ) {alert('Mohon pilih campaign untuk item tersebut!'); return false;}
+	if(  confirm('Terapkan campaign untuk item tersebut ?') )		
+		location.href='transaksi-2.php?c=terapkan_campaign&item_seq=' + i + '&paketid='+ sel_paket
+	else return false
+}
+
+function ubah_kuantitas(i, q){
+	TINY.box.show({iframe:'form_ubah_kuantitas.php?item_seq='+i,boxid:'frameless',width:255,height:187,fixed:true,maskid:'greymask',maskopacity:40,close:false})
+	return false;
+	var nq = prompt('Masukkan kuantitas item!', q);
+	if( nq == null)
+		return false
+	else
+		location.href='transaksi-2.php?c=ubah_kuantitas&item_seq=' + i + '&qty=' + ( isNaN( parseInt(nq) ) ? q : nq );
+}
+
+function __submit(url, par, tgt){
+	replace_char()
+	var sPar='';
+	if(par!='')sPar='?'
+	var parx=par.split('+')
+	for(var x=0; x<parx.length; x++){
+		try{var keyval=parx[x].split('=');document.getElementById(keyval[0]).value=keyval[1];}
+		catch(e){sPar+=parx[x]+'&'}
+	}
+	document.forms[0].encoding='multipart/form-data';
+	document.forms[0].method='post';
+	if(tgt!=''&&typeof(tgt)!='undefined')document.forms[0].target=tgt;
+	else document.forms[0].target='_self';
+	document.forms[0].action=url+sPar.substr(0, sPar.length-1);
+	DisablingInput('button', true)	;
+	document.forms[0].submit();
+}
+
+try{
+	if (window.addEventListener) {
+		window.addEventListener("scroll", function () {fix_sidemenu(); });
+		window.addEventListener("resize", function () {fix_sidemenu(); });  
+		window.addEventListener("touchmove", function () {fix_sidemenu(); });  
+		window.addEventListener("load", function () {fix_sidemenu(); });
+	} else if (window.attachEvent) {
+		window.attachEvent("onscroll", function () {fix_sidemenu(); });
+		window.attachEvent("onresize", function () {fix_sidemenu(); });  
+		window.attachEvent("ontouchmove", function () {fix_sidemenu(); });
+		window.attachEvent("onload", function () {fix_sidemenu(); });
+	}
+}catch(e){}
+
+function fix_sidemenu() {
+	var w, top, ob;
+	w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;  
+	top = scrolltop();
+	ob = document.getElementById("b_cari");
+	if (top > 379)
+		ob.setAttribute('style', 'position:fixed; top:0px; left:0px;margin-top:0px;');   
+	else 
+		ob.setAttribute('style', 'position:relative; ');   
+}
+  
+function scrolltop() {
+	var top = 0;
+	if (typeof(window.pageYOffset) == "number") {
+		top = window.pageYOffset;
+	} else if (document.body && document.body.scrollTop) {
+		top = document.body.scrollTop;
+	} else if (document.documentElement && document.documentElement.scrollTop) {
+		top = document.documentElement.scrollTop;
+	}
+	return top;
+}
+
+function simpan_session( ob ){
+	var frm = __create_iframe_otfly();
+	frm.src = 'transaksi-2.php?c=simpan_session&'+ob.name+'='+ob.value
+}
+
+function lanjut_proses(){
+	if( confirm('Lanjutkan proses?') ) __submit('transaksi-2.php', 'c=proses_order#jump');
+}
+
+function lanjut_proses_modern(){
+	if( document.getElementById('t_po').value == '' ) {alert('Masukkan nomor PO!'); return false;}
+	__submit('transaksi-2.php', 'c=cek_po_auto_submit#jump');
+}
+
+function lanjut_proses_tanpa_ampun(){
+	if( confirm('Lanjutkan proses?') ) __submit('transaksi-2.php', 'c=proses_order&sc=pass');
+}
+
+function cek_po(){
+	if( document.getElementById('t_po').value == '' ) {alert('Masukkan nomor PO!'); return false;}
+	__submit('transaksi-2.php', 'c=cek_po#jump');
+}
+
+function ubah_diskon_item(o, i){
+	TINY.box.show({iframe:'form_ubah_diskon.php?order_id='+o+'&item_seq='+i,boxid:'frameless',width:255,height:387,fixed:true,maskid:'greymask',maskopacity:40,close:false})
+}
+function log_cn(o, i){
+	TINY.box.show({iframe:'form_log_cn_akumulasi.php?paketid='+o+'&dealer_id='+i,boxid:'frameless',width:550,height:300,fixed:true,maskid:'greymask',maskopacity:40,close:false})
+}
+
+function lihat_campaign(i){
+	var ob = "#detail_campaign_" + i
+	var img = "down";
+	if( $( ob ).is( ":hidden" ))	img = "up";
+	$( ob  ).toggle( "blind", "slow", function(){ $("#img_detail_campaign_" + i).attr("src", "images/"+img+".png"); } );
+}
+
+function munculkan_campaign(i){
+	var ob = "#saran_campaign_" + i
+	$( ob  ).toggle( "blind", "slow" );
+}
+
+function munculkan_detail_keterangan(){
+	var ob = "#kontainer_keterangan_detail"
+	$( ob  ).toggle( "blind", "fast" );
+}
+
+$( document ).ready(function() {	
+   if($("#flag_terapkan").val()==2) ShowModal();
+
+   $("#ganti-gudang").click(function(){   	
+
+		$.get( "pilih-gudang.php", { order_id: "DRAFT-chandra-DA16711059B0", qty: 3, item: "BH0725L0413S13" } )
+		  .done(function( data ) {
+		  		//alert(data);
+		    	$(".modal-content").html(data);
+		    	$(".modal-content").css("overflow-y","scroll");
+		    	$(".modal-content").css("max-height","400px");
+		    	$("#myModal").css("display","block");
+		  });
+		  
+	});
+
+   
+});
+
+function ganti_gudang(i,g,item){
+	location.href='pilih-gudang.php?c=update_gudang&order_id='+ i + '&gudang='+g+'&item='+item;
+}
+
+function ShowModal() {
+	$("#myModal").css("display","block");     	
+    	
+    $(".modal-content").html('Reward akumulasi CN terdeteksi, apakah anda akan memakainya sekarang?');
+    $(".modal-content").append("<div style='text-align:center;padding:10px'><button onclick ='CloseModal()'>Iya, Pakai</button> | <button onclick='terapkan_cn()'>Nanti</button></div>");
+}
+
+function CloseModal() {
+	$("#myModal").css("display","none");
+	location.href='transaksi-2.php?c=pilih_cn&f=1';
+}
+
+function terapkan_cn() {
+	location.href='transaksi-2.php?c=pilih_cn&f=0';
+}
+

@@ -1,0 +1,20 @@
+<div style="margin:3px 0px 3px 0px">	
+		<table cellpadding="3" cellspacing="0" border="1" width="100%" style="border:solid #CCC 1px">
+			<tr><td colspan="2" style="background-color:#EEE; "><strong>#diskon-label#</strong></td></tr>
+			<tr><td>Budget saldo tersedia (Rp)</td><td>#saldo_bqtq#</td></tr>
+			<tr><td>Budget terpakai (Rp)</td><td>
+					#budget_terpakai_non_share#
+					<div style="padding:0px; padding-top:5px; display:#display-share-budget#">[Share Budget : #budget_terpakai_share#<strong style="text-decoration:none">. Kombinasi dengan #share-budget#</strong>]</div>
+				</td></tr>
+			<tr><td>Budget terpakai order lain (Rp)</td><td>#budget_terpakai_order_lain#</td></tr>
+			<tr><td style="font-weight:900" class="kuning">Sisa budget tersedia (Rp)</td><td style="font-weight:900"  class="kuning">#budget_tersisa#</td></tr>
+			<tr><td colspan="2">
+				<div style="width:100%; padding:0px; margin:0px; display:#display-button-share-budget#">
+					<input style="width:49%;float:left" #disabled-button-share-budget# onclick="history.back()"
+						type="button" name="b_batal_#diskonid#" id="b_batal_#diskonid#" value="Batal"  />
+					<input style="width:49%;float:right" #disabled-button-share-budget# onclick="kombinasikan_budget(#diskonid#, #diskonid_awal#)"
+						type="button" name="b_kombinasi_#diskonid#" id="b_kombinasi_#diskonid#" value="Kombinasikan Budget" class="biru" />
+				</div>
+				</td></tr>
+		</table>			
+</div>

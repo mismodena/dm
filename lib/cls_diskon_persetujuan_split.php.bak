@@ -1,0 +1,337 @@
+<?
+
+class tambahan_diskon_persetujuan_split extends tambahan_diskon{
+			
+	public static function isi_detail_order( $data_dealer, $mode = "", $item_stok = array() ){
+		// cek order dealer yg blm dikirimkan
+		$nominal_order = array("nominal_order" => 0);
+		if( $data_dealer["order_id"] != "" )
+			$nominal_order = order::nominal_order( $data_dealer["idcust"], 
+				array( 
+					"b.order_id" => array("=",  "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'" ), 
+					"a.gudang" => array("=", "'". main::formatting_query_string( $data_dealer["gudang"] ) ."'") 
+					) 
+				);
+
+		//$parameter["b.order_id"] = array( "=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'" );
+		//$rs_daftar_diskon = tambahan_diskon::daftar_tambahan_diskon( $parameter, $data_dealer["order_id"] );
+				
+		$rasio_campaign_non_campaign = round(100 * $nominal_order["total_order_campaign"] / $nominal_order["nominal_order"], 2) . " - " . round(100 * $nominal_order["total_order_non_campaign"] / $nominal_order["nominal_order"], 2);
+		
+		$rs_data_order = order::daftar_order_item_split( $data_dealer["order_id_split"] );		
+		
+		$template = $tabel_header = "";
+		if( $mode != "" ){
+			$tabel_header = "
+			<tr>
+				<td width=\"10px\">No</td>
+				<td>Item</td>
+				<td>Qty (Unit)</td>
+				<td>Stok Gudang</td>
+				<td>Harga/Unit (Rp)</td>
+				<td>Disc Campaign (Rp)</td>
+				<td>Disc Tambahan (Rp)</td>
+				<td>Total Disc (Rp)</td>
+				<td>Total Disc (%)</td>
+				<td>Sub Total (Rp)</td>
+			</tr>";
+			$colspan = "colspan=9";
+			$template = "-table";
+		}
+
+		$template = file_get_contents("template/daftar-item". $template .".html");
+		$daftar_order = "<table cellpadding=3 cellspacing=3 border=1 width=100% style=\"border:none\">" . $tabel_header;
+		
+		$counter = 1;
+		$order_sub_total = 0;
+		
+		if( count( $item_stok ) <= 0 ){
+			$arr_stok = order::cek_cek_stok_item_order( $data_dealer["order_id"] );
+			while( $stok = sqlsrv_fetch_array( $arr_stok ) )
+				$item_stok[ $stok["item_id"] ][ $stok["gudang"] ] = $stok["kuantitas"];
+		}
+		
+		while( $data_order = sqlsrv_fetch_array( $rs_data_order ) ){
+			$total_diskon_nominal = $data_order["diskon_total"];//$data_order["diskon"] + $data_order["tambahan_diskon_belum_disetujui"];
+			$persentase_diskon_nominal = $data_order["sub_total"] > 0 ? round( 100 * $total_diskon_nominal  / $data_order["sub_total"], 2) : 100;
+			$sub_total = $data_order["sub_total"];//$data_order["sub_total_campaign"] - $data_order["tambahan_diskon_belum_disetujui"];
+			$order_sub_total += $sub_total;
+			$arr["#nomor#"]=$counter;
+			$arr["#nama_item#"]=$data_order["nama_item"];
+			$arr["#kuantitas#"]=$data_order["kuantitas"];
+			$arr["#harga#"]=main::number_format_dec($data_order["harga"]);
+			$arr["#sub_total_gross#"]=main::number_format_dec($data_order["kuantitas"]*$data_order["harga"]);
+			$arr["#diskon_campaign#"]=main::number_format_dec($data_order["diskon"]);
+			$arr["#diskon_tambahan#"]=main::number_format_dec( $data_order["tambahan_diskon"] /*$data_order["tambahan_diskon_belum_disetujui"]*/ );
+			$arr["#total_diskon_nominal#"]=main::number_format_dec( $total_diskon_nominal );
+			$arr["#total_diskon_persen#"]=  $data_order["diskon_total_persen"]; //$persentase_diskon_nominal;
+			$arr["#rasio_diskon_total_order#"]=round( 100 * $total_diskon_nominal / $nominal_order["nominal_order_gross"], 2 ) . "% / " . round( 100 * $total_diskon_nominal / $nominal_order["nominal_order"], 2 );
+			$arr["#sub_total#"]=main::number_format_dec( $sub_total );
+			$arr["#keterangan#"]=$data_order["keterangan"] . ( $data_order["keterangan"] != "" && $data_order["keterangan_diskon_tambahan"] != ""? ", " . $data_order["keterangan_diskon_tambahan"] : $data_order["keterangan_diskon_tambahan"] );
+			
+			 if( $item_stok[ $data_order["item_id"] ][ $data_order["gudang"] ] < 0 )	{
+					 $item_stok_habis = true;		
+					 $arr["#stok_habis#"] = "<sup class=\"peringatan\"><br />Mohon ubah kuantitas sesuai ketersediaan stok</sup>"; 
+			 }else	$arr["#stok_habis#"] = ""; 
+			$arr["#stok#"] = $item_stok[ $data_order["item_id"] ][ $data_order["gudang"] ]; 
+			$arr["#gudang#"] = $data_order["gudang"]; 
+			$arr["#display-gudang-non-lokal#"] = trim(strtoupper($data_order["gudang"])) != trim(strtoupper($data_order["gudang_asal"])) ? "block" : "none" ; 
+			$arr["#gudang_lokal#"] = $data_order["gudang"];//trim(strtoupper($data_order["gudang"])) != trim(strtoupper($data_order["gudang_asal"])) ? "" : "YA" ; 
+			
+			$daftar_order .= str_replace( array_keys($arr), array_values($arr), $template );
+			
+			$counter++;
+		}
+
+		// diskon per faktur
+		unset( $parameter );
+		$parameter["b.order_id"] = array(" is ", " null ");
+		$parameter["d.order_id"] = array(" is ", " null ");
+		//$parameter["c.gudang"] = array("=", "'". main::formatting_query_string( $data_dealer["gudang"] ) ."'");
+		$rs_diskon_per_faktur = tambahan_diskon::nilai_tambahan_diskon( $data_dealer["order_id"],  $order_sub_total, $parameter );
+
+		$diskon_tambahan_per_faktur = 0;
+		
+		$total_nominal_order = array("nominal_order" => 0);
+		if( $data_dealer["order_id"] != "" )
+			$total_nominal_order = order::nominal_order( $data_dealer["idcust"], 
+				array( 
+					"b.order_id" => array("=",  "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'" )
+					) 
+				);
+
+		while( $diskon_per_faktur = sqlsrv_fetch_array( $rs_diskon_per_faktur ) ){
+			$diskon_per_faktur["nilai_diskon"] = $diskon_per_faktur["nilai_diskon"] * ( $order_sub_total / $total_nominal_order["nominal_order"] );
+			$nilai_diskon_tambahan_per_faktur = $diskon_per_faktur["nilai_diskon"] <= 100 ? ($order_sub_total - $diskon_tambahan_per_faktur ) * $diskon_per_faktur["total_nilai_persen_diskon_tambahan"] / 100 : $diskon_per_faktur["nilai_diskon"];
+			$diskon_tambahan_per_faktur += $nilai_diskon_tambahan_per_faktur;
+			@$daftar_diskon_per_faktur .= "
+				<tr>
+					<td ". $colspan ." align=left style=\"border-bottom:solid 1px #CCC; padding-top:3px; width:50%\">". $diskon_per_faktur["diskon"] ." - ". $diskon_per_faktur["singkatan"] ." ". $diskon_per_faktur["total_nilai_persen_diskon_tambahan"] ."%<br />Rasio diskon : order gross / net campaign = ". round($nilai_diskon_tambahan_per_faktur * 100 / $nominal_order["nominal_order_gross"], 2) ."% /  ". round($nilai_diskon_tambahan_per_faktur * 100 / $nominal_order["nominal_order"], 2) ."%</td>
+					<td align=right style=\"border-bottom:solid 1px #CCC; padding-top:3px\">-(Rp". main::number_format_dec( $nilai_diskon_tambahan_per_faktur ) .")</td>
+				</tr>";
+		}
+
+		$daftar_order .= "
+			<tr>
+				<td ". $colspan ." align=left style=\"border-bottom:solid 1px #CCC; padding-top:3px\"><strong>TOTAL</strong></td>
+				<td align=right  style=\"border-bottom:solid 1px #CCC; padding-top:3px\"><strong>Rp". main::number_format_dec( $order_sub_total ) ."</strong></td>
+			</tr>
+			". @$daftar_diskon_per_faktur ."
+			<tr>
+				<td ". $colspan ."align=left style=\"border-bottom:solid 1px #CCC; padding-top:3px\"><strong>GRAND TOTAL</strong></td>
+				<td align=right  style=\"border-bottom:solid 1px #CCC; padding-top:3px\"><strong>Rp". main::number_format_dec( $order_sub_total  -  $diskon_tambahan_per_faktur) ."</strong></td>
+			</tr>
+		</table>";
+		
+		return array( $daftar_order, $rasio_campaign_non_campaign, $order_sub_total  -  $diskon_tambahan_per_faktur );
+	}
+	
+	private static function isi_email_persetujuan( $dealer_id, $order_id, $nominal_order, $rs_daftar_diskon, $nik = "", $gudang = "" ){
+		
+		$nominal_order_setelah_diskon = $nominal_order["nominal_order"];
+		$content = "";
+		$counter = 1;
+		
+		$item_stok = array();
+		$arr_stok = order::cek_cek_stok_item_order( $order_id["order_id"] );
+		while( $stok = sqlsrv_fetch_array( $arr_stok ) )
+			$item_stok[ $stok["item_id"] ][ $stok["gudang"] ] = $stok["kuantitas"];
+		
+		while( $diskon = sqlsrv_fetch_array( $rs_daftar_diskon ) ){
+			
+			$template_diskon = file_get_contents("template/diskon-readonly.html") . "<hr width=100%/>";
+				
+			$arr["#kelas#"] = $counter % 2 == 0 ? 1 : 2;
+			$arr["#counter#"] = $counter;
+			$arr["#diskon-label#"] = $diskon["diskon"] . " (KODE : ". $diskon["singkatan"] .")";
+			$arr["#diskonid#"] = $diskon["diskon_id"];
+			/*
+			$arr["#diskon#"] = main::number_format_dec
+				( 
+					$diskon["nilai_diskon"] != "" ? $diskon["nilai_diskon"] : $diskon["default_nilai"]
+				);
+			*/
+			$arr["#diskon#"] = $diskon["nilai_diskon"] > 100 ? main::number_format_dec
+				( 
+					$diskon["nilai_diskon"] != "" ? $diskon["nilai_diskon"] : $diskon["default_nilai"]
+				) : ($diskon["nilai_diskon"] != "" ? $diskon["nilai_diskon"] : $diskon["default_nilai"]) ;
+			$arr["#diskon#"] .= " - SATUAN " . ( ( $diskon["nilai_diskon"] != "" ? $diskon["nilai_diskon"] : $diskon["default_nilai"] ) > 100 ? "RUPIAH (RP)" : "PERSEN (%)" );
+			
+			$arr["#diskon-label-keterangan#"] = $diskon["keterangan_diskon"] != "" ? "<br />" . $diskon["keterangan_diskon"] : "";		
+			$arr["#diskon-keterangan#"] =  $diskon["keterangan_order_diskon"];
+			
+			$arr["#data_lampiran#"] = $diskon["lampiran_order_diskon"];
+			$arr["#url_lampiran#"] = __NAMA_SERVER__ . __UPLOAD_PATH__ . $diskon["lampiran_order_diskon"];			
+			
+			// persetujuan
+			$tambahan_diskon_persetujuan = new tambahan_diskon_persetujuan( $order_id["order_id"], $diskon["diskon_id"] );
+			$arr["#persetujuan-melalui#"] = count( $tambahan_diskon_persetujuan->posisi ) > 0 ? implode(", ", $tambahan_diskon_persetujuan->posisi ) : 'Tidak memerlukan persetujuan';
+			
+			$status_persetujuan = $diskon["status_persetujuan"] == 0 ? 4 : $diskon["status_persetujuan"];
+			$arr["#status-persetujuan#"] = $GLOBALS["arr_status_persetujuan"][ $status_persetujuan ] ;
+			$arr["#tanggal-persetujuan#"] = is_object( $diskon["disetujui_tanggal"] ) ? 
+				$diskon["disetujui_tanggal"]->format("d") . " " . $GLOBALS["arr_month"][ (int)$diskon["disetujui_tanggal"]->format("m") ] . " " . $diskon["disetujui_tanggal"]->format("Y")
+				: "";
+			$arr["#keterangan-persetujuan#"] = $diskon["disetujui_keterangan"];
+			
+			// cek item diskon
+			unset( $rs_diskon_item );
+			
+			$parameter = array();
+			$parameter["b.order_id"] = array( "=", "'". $order_id["order_id"] ."'" );
+			$parameter["a.diskon_id"] = array( "=", "'". $diskon["diskon_id"] ."'" );
+			
+			$template_diskon_item = file_get_contents( "template/diskon-item-readonly.html" );
+			
+			if( $diskon["pilih_item"] == 1 ){
+				
+				$rs_diskon_item = tambahan_diskon::daftar_order_diskon_item(  $parameter );
+				
+			}elseif( $diskon["gift_diskon"] != 2 ){
+				
+				$rs_diskon_item = tambahan_diskon::daftar_order_diskon_itemfree(  $parameter );
+				$template_diskon_item = file_get_contents( "template/diskon-itemfree-readonly.html" );
+				
+			}
+
+			if( isset( $rs_diskon_item ) && sqlsrv_num_rows( $rs_diskon_item ) > 0 ){
+				$s_diskon_item = "";			
+				$counter_item = 1;
+				
+				while( $diskon_item = sqlsrv_fetch_array( $rs_diskon_item ) ){
+											
+					$nilai_nominal_diskon = tambahan_diskon::hitung_diskon
+						( 
+							@$diskon_item["item_subtotal"],
+							@$diskon_item["nilai_diskon"] != "" ? @$diskon_item["nilai_diskon"] : @$diskon["default_nilai"]							
+						);
+				
+					$nominal_order_setelah_diskon -= $nilai_nominal_diskon;
+						
+					$rasio_diskon = "";
+					if( $diskon["pilih_item"] == 1 )
+						$rasio_diskon = round($nilai_nominal_diskon * 100 / $nominal_order["nominal_order_gross"], 2) . "% / " . round($nilai_nominal_diskon * 100 / $nominal_order["nominal_order"], 2) . "%";
+					elseif( $diskon["gift_diskon"] != 2 )
+						$rasio_diskon = round($diskon_item["harga"] * $diskon_item["kuantitas"] * 100 / $nominal_order["nominal_order_gross"], 2) . "% / " . round($diskon_item["harga"] * $diskon_item["kuantitas"] * 100 / $nominal_order["nominal_order"], 2) . "%";
+							
+					$arr["#counter#"] = $counter_item;
+					$arr["#kode_item#"] = $diskon_item["item_id"];
+					$arr["#item_seq#"] = isset( $diskon_item["item_seq"] ) ? $diskon_item["item_seq"] : $diskon_item["item_id"];
+					$arr["#nama_item#"] = $diskon_item["item_nama"];;
+					$arr["#diskonid#"] = $diskon["diskon_id"];
+					$arr["#kuantitas#"] = $diskon_item["kuantitas"];
+					$arr["#item_subtotal#"] = main::number_format_dec( @$diskon_item["item_subtotal"] );
+					$arr["#rasio#"] = $rasio_diskon;
+					$arr["#subtotal-display#"] = @$diskon_item["item_subtotal"] != "" ? "block" : "none" ;
+					
+					 if( $item_stok[ $diskon_item["item_id"] ][ $diskon_item["gudang"] ] < 0 )	{
+						 $item_stok_habis = true;		
+						 $arr["#stok_habis#"] = "<sup class=\"peringatan\"><br />Mohon ubah kuantitas sesuai ketersediaan stok</sup>"; 
+					 }else	$arr["#stok_habis#"] = ""; 
+					 
+					$arr["#stok#"] = $item_stok[ $diskon_item["item_id"] ][ $diskon_item["gudang"] ]; 
+					$arr["#gudang#"] = $diskon_item["gudang"]; 
+					$arr["#display-gudang-non-lokal#"] = trim(strtoupper($diskon_item["gudang"])) != trim(strtoupper($diskon_item["gudang_asal"])) ? "block" : "none" ; 
+					
+					$s_diskon_item .= str_replace( array_keys( $arr ), array_values( $arr ), $template_diskon_item );
+					$counter_item++;
+				}
+				$arr["#daftar_item#"] =  "<ul class=\"list\">" . $s_diskon_item . "</ul>";
+					
+			} else {
+				$arr["#daftar_item#"] = "";
+				if	( $diskon["gift_diskon"] != 1 && $diskon["wajib_pilih_item"] == 0 )
+					$nominal_order_setelah_diskon -= tambahan_diskon::hitung_diskon
+						( 
+							$nominal_order_setelah_diskon, 
+							$diskon["nilai_diskon"] != "" ? $diskon["nilai_diskon"] : $diskon["default_nilai"]
+						);
+			}						
+			
+			$content .= str_replace( array_keys( $arr ), array_values( $arr ), $template_diskon );
+			
+			$counter++;
+			
+		}
+		
+		// cek overlimit kredit dealer, nominal order direset utk dijumlahkan dengan induk order nya
+		$s_overlimit = "";
+		$nominal_order = order::nominal_order( $dealer_id, 
+					array( 
+						"b.order_id" => array("=",  "'". main::formatting_query_string( $order_id["order_id"] ) ."'" ),
+					) 
+				);
+		$overlimit = order::check_overlimit( $dealer_id, $nominal_order["nominal_order_net"] ) ;
+		if( $overlimit["is_overlimit"] ) 
+			$s_overlimit = "<h4 style=\"background-color:yellow\">DEALER OVERLIMIT</h4>";
+		
+		$detail_order =  self::isi_detail_order( array("idcust"=>$dealer_id, "order_id"=>$order_id["order_id"], "order_id_split"=>$order_id["order_id_split"], "gudang" => $gudang ), "xxxx", $item_stok );
+		
+		$content .= 
+			$s_overlimit .
+			"<h4>Rasio Campaign - Non Campaign : ". $detail_order[1] ."</h4>" .
+			"<h4>Detail Order</h4>" .  $detail_order[0] ;
+			
+		$nominal_order_setelah_diskon = $detail_order[2];
+		
+		return array( $content, $nominal_order_setelah_diskon );
+		
+	}
+		
+	
+	static function kirim_email_tanggapan( $dealer_id, $order_id, $order_id_split, $gudang, $diskon_id, $konten_tambahan = "" ){
+		
+		// load dealer
+		$_POST["sc"] = "cl";
+		$_REQUEST["order_id"] = $order_id;
+
+		include __DIR__ . "/../dealer.php";
+
+		$rs_dealer = sql::execute( $sql );
+		$data_dealer = sqlsrv_fetch_array( $rs_dealer ) or die( "<script>alert('Gagal mendapatkan info dealer. [fungsi : kirim email tanggapan]')</script>");
+
+		$subject_tambahan = "";
+		if( $konten_tambahan != "" ) $subject_tambahan = "[URGENT!!!]";
+		$subject = $subject_tambahan . "Tanggapan pengajuan tambahan diskon [order no. ". $order_id_split ."] ";
+		if( $konten_tambahan == "NODISKON" ) {
+			$konten_tambahan = "";
+			$subject = "mobile sales :: order baru [order no. ". $order_id_split ."] ";
+		}
+
+		$nominal_order = order::nominal_order( $dealer_id, 
+					array( 
+						"b.order_id" => array("=",  "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'" ),
+						"a.gudang" => array("=", "'". main::formatting_query_string( $data_dealer["cabang"] ) ."'") 
+					) 
+				);
+		//$nominal_order_setelah_diskon = $nominal_order["nominal_order"];		
+		
+		$parameter["b.order_id"] = array( "=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'" );
+		//$parameter["b.diskon_id"] = array( "=", "'". main::formatting_query_string( $diskon_id ) ."'" );
+		$rs_daftar_diskon = tambahan_diskon::daftar_tambahan_diskon( $parameter, $data_dealer["order_id"] );
+		
+		$arr_order_id = array( "order_id" => $order_id, "order_id_split" => $order_id_split );
+		list($content, $nominal_order_setelah_diskon) = self::isi_email_persetujuan( $dealer_id, $arr_order_id, $nominal_order, $rs_daftar_diskon, "", $gudang );
+
+		unset( $arr );
+		$kontainer = file_get_contents("template/diskon-approval-header.html") . "<style>" . file_get_contents( __DIR__ . "/../css/main.css") . "</style>";
+		$arr["#idcust#"] = $data_dealer["idcust"];
+		$arr["#namecust#"] = $data_dealer["namecust"];
+		$arr["#nominal_order#"] = main::number_format_dec( $nominal_order["nominal_order"] );
+		$arr["#nominal_order_setelah_diskon#"] = main::number_format_dec( $nominal_order_setelah_diskon );
+		$arr["#diajukan_oleh#"] = $data_dealer["nama_lengkap"];
+		$arr["#nomor_order#"] = $order_id_split; 
+		$arr["#alamat_memastikan_order#"] = __NAMA_SERVER__ . "__oe_for_sure.php?order_id=" . $data_dealer["order_id"] . "&order_id_split=" . $order_id_split;
+		
+		$data_detail_order = "<h4>Keterangan tambahan</h4>" . $data_dealer["keterangan_order"];
+		$arr["#daftar-diskon#"] = $konten_tambahan . $content . $data_detail_order;
+		$kontainer = str_replace( array_keys( $arr ), array_values( $arr ), $kontainer );
+
+		//echo $data_dealer["email"] . "<br />" . $kontainer . "<br /><br /><br />";
+		//$data_dealer["email"] = "zaenal.fanani@modena.co.id";
+		main::send_email($data_dealer["email"], $subject,$kontainer);
+	}
+		
+}
+
+?>

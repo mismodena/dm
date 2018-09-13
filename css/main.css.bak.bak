@@ -1,0 +1,184 @@
+html, body, table{
+	margin:0px;
+	font-family:verdana, tahoma, arial, sans;
+	overflow-x: hidden !important;
+	width:100%;
+	font-size:small !important;
+}
+input[type=text], input[type=password], input[type=number], input[type=button], input[type=submit], textarea, select{
+	max-width:100%;
+	height:37px;
+}
+
+/* grey layer, dialog, tooltip */
+.ui-dialog{ position:fixed !important;}
+.ui-tooltip{ font-size:12px; color:#737375;}
+.tbox {position:absolute; display:none; padding:14px 17px; z-index:90000}
+.tinner {padding:15px; -moz-border-radius:5px; border-radius:1px; background:#fff url(../images/generator.gif) no-repeat 50% 50%; border:none solid #F0F0F3}
+.tmask {position:absolute; display:none; top:0px; left:0px; height:100%; width:100%; background:#000; z-index:8000}
+.tclose {position:absolute; top:17px ; right:17px; width:32px; height:32px; cursor:pointer; background:url(../images/close.png) no-repeat; display:none;}
+/*.tclose:hover {background-position:0 -30px}*/
+
+select option{
+	max-width:100%;
+}
+.list{
+	padding:0px !important;
+	list-style-type: none;
+}
+
+.ui-datepicker-prev  span{
+    background-image: url(../images/prev.png) !important;
+        background-position: 0px 0px !important;
+}
+
+.ui-datepicker-next span {
+    background-image: url(../images/next.png) !important;
+        background-position: 0px 0px !important;
+}
+
+.item-tambahan{
+	margin-left:-7px !important;
+}
+.item-non-paket, .item-paket, .item-free, .total-harga, .item-order{
+	width:100%;
+	padding: 7px 0px 7px 0px;
+	line-height:23px;
+	border:none 1px #CCC;
+	margin:0px;
+}
+.item-non-paket div, .item-paket div, .item-free div{
+	margin:0px;
+}
+.item-non-paket div.item, .item-paket div.item, .item-free div.item, .item-order div.item{
+	font-size:small;
+	font-weight:900;
+	width:100%;
+	padding-bottom:7px;
+	margin-left:0px;
+}
+.total-harga{
+	text-align:center;
+	padding:0px;
+	font-size:21px;
+	font-weight:900;
+	border:none;
+	line-height:37px;
+	background-color:#EEE;
+	border:solid #CCC 1px;
+	margin:17px 0px 17px 0px !important;
+}
+input[type="text"], input[type=password], input[type="number"], textarea{
+	padding-left:5px; 
+	padding-right:5px;
+	border:1px solid #CCC;
+}
+
+.sub-judul{
+	text-align:center;
+	padding:7px 0px 7px 0px;
+	border:#CCC double 1px;
+	background-color:#abd3fc;
+	width:100%;
+	color:#333;
+	font-weight:900 !important;
+}
+
+.bg-1, .bg-2{
+	width:100%;
+	line-height:normal;
+}
+.bg-1 div, .bg-2 div{ padding:7px;}
+.bg-1, .bg-2{ border-bottom:1px solid #CCC; }
+.bg-2{ background-color:#EEE;} 
+
+.tanda-seru{color:red; font-size:27px; padding-right:7px; font-weight:900 !important;}
+.tombol-hijau{width:100%; height:37px; margin-top:17px; margin-bottom:17px; text-align:center; background-color:#99ff99; font-weight:900; border:green 2px solid;}
+
+.peringatan{color:red; font-weight:900}
+.sembunyikan{display:none}
+
+.span-hijau, .span-merah{
+	color:#FFF;
+	padding:1px 3px 1px 3px;
+}
+
+.span-hijau{background-color:green}
+.span-merah{background-color:red}
+
+/* slide menu */
+.slideout-menu {
+		position: fixed;
+		top: 0;
+		left: -250px;
+		width: 250px;
+		height: 100%;
+		background: #333;
+		z-index: 100;
+	}
+.slideout-menu h3 {
+	position: relative;
+	padding: 1px 10px;
+	color: #fff;
+	font-size: 12px;
+	font-weight: 900;
+	border-bottom: 4px none #222;
+}
+.slideout-menu .slideout-menu-toggle {
+	position: absolute;
+	top: 1px;
+	right: 10px;
+	display: inline-block;
+	padding: 6px 9px 5px;
+	font-family: Arial, sans-serif;
+	font-weight: bold;
+	line-height: 1 !important;
+	background: #222;
+	color: #999;
+	text-decoration: none;
+	vertical-align: top;
+}
+.slideout-menu .slideout-menu-toggle:hover {
+	color: #fff;
+}
+.slideout-menu ul {
+	list-style: none;
+	font-weight: 300;
+	border-top: 1px solid #151515;
+	border-bottom: 1px solid #454545;
+}
+.slideout-menu ul li {
+	border-top: 1px solid #454545;
+	border-bottom: 1px solid #151515;
+	margin-left:-39px;
+}
+.slideout-menu ul li a {
+	position: relative;
+	display: block;
+	padding: 10px;
+	color: #999;
+	text-decoration: none;
+}
+.slideout-menu ul li a:hover {
+	background: #000;
+	color: #fff;
+}
+.slideout-menu ul li a i {
+	position: absolute;
+	top: 15px;
+	right: 10px;
+	opacity: .5;
+}
+
+.slideout-menu-toggle {
+	font-size: 1.2em;
+	color: #999;
+	text-decoration: none;
+}
+.slideout-menu-toggle:hover {
+	color: #fff;
+}
+.slideout-menu-toggle i {
+	vertical-align: top;
+	margin: 5px 3px 0 0;
+}

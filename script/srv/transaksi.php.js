@@ -1,0 +1,14 @@
+var title = 'Transaksi Penjualan - Pilih Dealer';
+
+try{
+	document.forms[0].method='get';
+}catch(e){}
+
+function cari_dealer(ob){
+	location.href='transaksi.php?t_dealer='+ob.value
+}
+
+function lanjut_proses(s){
+	if( confirm('Anda akan melanjutkan untuk pemilihan item order dealer?') )
+		location.href='transaksi-2.php?c=pilih_dealer&dealer=' + s
+}

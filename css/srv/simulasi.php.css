@@ -1,0 +1,62 @@
+body, html{
+	font-size:12px !important;
+}
+input[type=text], input[type=number], input[type=button], input[type=submit], textarea, select{
+	max-width:100%;
+	height:auto !important;
+}
+
+.div-stok, .peringatan, h3{display:none;}
+h3.sub-judul, div.total-harga h3{display:block;}
+#daftar-item, #simulasi-pembelian{	
+	vertical-align:top;
+	padding:0px;	
+}
+#daftar-item{
+	width:35%;
+	float:left;
+	background-color:#EEE;
+}
+#simulasi-pembelian{
+	width:65%;
+	float:right;
+}
+
+#daftar-item div{
+	border:1px #CCC solid;
+	border-top:none;
+	border-right:none;
+}
+#simulasi-pembelian div{
+	border:1px #CCC solid;
+	border-top:none;
+}
+#daftar-item div, #simulasi-pembelian div{
+	padding:0px;
+	margin:0px;
+}
+#daftar-item div div, #simulasi-pembelian div div{
+	border:none;
+	padding:7px;
+}
+
+#daftar-item span.title, #simulasi-pembelian span.title{font-size:17px;}
+#daftar-item span.title{border-bottom:1px solid #EEE;}
+
+.bg-putih{
+	background-color:white; 	
+}
+
+.frame{
+	width:100%;
+	height:200px;
+	border:none;
+	border-top:#999 solid 3px;
+	margin-top:7px;
+}
+
+.div-img-display{display:none}
+
+.div-kontainer-info-campaign{display:block !important}
+
+.text-kuantitas{display:none}

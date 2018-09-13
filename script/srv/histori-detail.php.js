@@ -1,0 +1,2 @@
+var title = 'Detail Penjualan';
+
