@@ -1,0 +1,546 @@
+<?
+
+if( $_REQUEST["c"] == "hapus_order" ){
+	sql_dm::hapus_order( $_REQUEST["order_id"] );
+	echo "<script>location.href='bm-diskon-pengajuan.php';</script>";
+	exit;
+
+}elseif( $_REQUEST["c"] == "hitung_order" ){
+	
+	$rs_daftar_diskon = tambahan_diskon::daftar_tambahan_diskon( array("b.order_id" => array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'") ), $data_dealer["order_id"] );
+	$ada_yg_kosong = false;
+	
+	while( $daftar_diskon = sqlsrv_fetch_array($rs_daftar_diskon) ){			
+
+		$tambahan_diskon_persetujuan = new tambahan_diskon_persetujuan( $data_dealer["order_id"], $daftar_diskon["diskon_id"] );
+		$nama_file_lampiran = "";
+		if( in_array( $daftar_diskon["status_persetujuan"], array( 1, 2 ) ) /*|| count( $tambahan_diskon_persetujuan->posisi ) <= 0 */){	
+			$_POST["t_disc_" .  $daftar_diskon["diskon_id"]] = $daftar_diskon["nilai_diskon"];
+			$_POST["t_discket_" .  $daftar_diskon["diskon_id"]] = $daftar_diskon["keterangan_order_diskon"];
+			goto Skip_Upload;
+		}
+				
+		if( @$_FILES["f_" . $daftar_diskon["diskon_id"]]["tmp_name"] == "" ) goto Skip_Upload;
+	
+		// upload lampiran				
+		$nama_file_lampiran = str_replace("/", "-", $data_dealer["order_id"]) . "_" . $daftar_diskon["diskon_id"] . "." . pathinfo( $_FILES["f_" . $daftar_diskon["diskon_id"]]["name"], PATHINFO_EXTENSION );
+		@unlink( __UPLOAD_PATH__ . $nama_file_lampiran );
+		move_uploaded_file( $_FILES["f_" . $daftar_diskon["diskon_id"]]["tmp_name"],  __UPLOAD_PATH__ . $nama_file_lampiran );
+
+Skip_Upload:
+		
+		if( !isset( $_POST["t_disc_" .  $daftar_diskon["diskon_id"]] ) ) continue; // diskon yg sudah disetujui
+		
+		$_POST["t_disc_" .  $daftar_diskon["diskon_id"]] = str_replace(",", "", $_POST["t_disc_" .  $daftar_diskon["diskon_id"]]);
+		
+		if	( 	!is_numeric( $_POST["t_disc_" .  $daftar_diskon["diskon_id"]] ) || 
+				$_POST["t_disc_" .  $daftar_diskon["diskon_id"]] == "" 
+			)	$_POST["t_disc_" .  $daftar_diskon["diskon_id"]] = 0;
+		if	( $daftar_diskon["gift_diskon"] == 1 )	$_POST["t_disc_" .  $daftar_diskon["diskon_id"]] = 100;
+		$arr_set = $arr_parameter = array();
+		
+		$arr_set["nilai_diskon"] = array("=", "'". main::formatting_query_string( $_POST["t_disc_" .  $daftar_diskon["diskon_id"]] ) ."'");
+		$arr_set["keterangan_order_diskon"] = array("=", "'". main::formatting_query_string( $_POST["t_discket_" .  $daftar_diskon["diskon_id"]] ) ."'");
+		if( $nama_file_lampiran != "" ) 
+			$arr_set["lampiran_order_diskon"] = array("=", "'". main::formatting_query_string( $nama_file_lampiran ) ."'");
+		if( count( $tambahan_diskon_persetujuan->posisi ) <= 0 )	// klo persetujuan tidak dibutuhkan, so langsung update status order_diskon.disetujui = 1
+			$arr_set["disetujui"] = array("=", "'1'");
+		
+		$arr_parameter["user_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'");
+		$arr_parameter["order_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'");
+		$arr_parameter["diskon_id"] = array("=", "'" . main::formatting_query_string( $daftar_diskon["diskon_id"] ) . "'");
+		
+		tambahan_diskon::update_order_diskon( $arr_set, $arr_parameter );				
+				
+		if( $_POST["t_disc_" .  $daftar_diskon["diskon_id"]] == 0 ) $ada_yg_kosong = true;
+
+	}
+
+	if( $ada_yg_kosong && @$_REQUEST["sc"] == "kirim_pengajuan" ){
+		echo "<script>alert('Nilai tambahan diskon tidak boleh kosong (0)!\\nPeriksa kembali nilai pengajuan tambahan diskon!');</script>";
+		goto Skip_Semua;		
+	}
+
+	// untuk redirect ke halaman lain
+	if( isset($_REQUEST["sc"]) ){
+		
+		if( $_REQUEST["sc"] == "pilih_diskon" ) 
+			die("<script>location.href='diskon-pengajuan-pilihdiskon.php?dealer_id=". $_REQUEST["dealer_id"] ."&order_id=". $data_dealer["order_id"] . "'</script>");
+		
+		elseif( $_REQUEST["sc"] == "pilih_item_order" ) 
+			die("<script>location.href='diskon-pengajuan-pilihitemorder.php?dealer_id=". $_REQUEST["dealer_id"] ."&order_id=". $data_dealer["order_id"] ."&diskonid=". $_REQUEST["diskonid"] ."'</script>");
+		
+		elseif( $_REQUEST["sc"] == "pilih_item_order_bqtq" ) 
+			die("<script>location.href='diskon-pengajuan-pilihitemorder-bqtq.php?dealer_id=". $_REQUEST["dealer_id"] ."&order_id=". $data_dealer["order_id"] ."&diskonid=". $_REQUEST["diskonid"] ."'</script>");
+		
+		elseif( $_REQUEST["sc"] == "pilih_item_free" ) 
+			die("<script>location.href='diskon-pengajuan-pilihitemfree.php?dealer_id=". $_REQUEST["dealer_id"] ."&order_id=". $data_dealer["order_id"] ."&diskonid=". $_REQUEST["diskonid"] ."'</script>");
+			
+		elseif( $_REQUEST["sc"] == "pilih_item_free_bqtq" ) 
+			die("<script>location.href='diskon-pengajuan-pilihitemfree-bqtq.php?dealer_id=". $_REQUEST["dealer_id"] ."&order_id=". $data_dealer["order_id"] ."&diskonid=". $_REQUEST["diskonid"] ."'</script>");
+			
+		elseif( $_REQUEST["sc"] == "hapus_itemorder"  || $_REQUEST["sc"] == "hapus_itemorder_bqtq" ) 
+			goto Hapus_ItemOrder;			
+		
+		elseif( $_REQUEST["sc"] == "hapus_itemfree" || $_REQUEST["sc"] == "hapus_itemfree_bqtq" ) 
+			goto Hapus_ItemFree;			
+			
+		elseif( $_REQUEST["sc"] == "kirim_pengajuan" ) 
+			goto Kirim_Pengajuan;
+			
+	} else die("<script>location.href='diskon-pengajuan.php?dealer_id=". $_REQUEST["dealer_id"] ."&order_id=". $data_dealer["order_id"] ."'</script>");
+	
+}elseif( $_REQUEST["c"] == "tambah_diskon" ){
+
+	$rs_daftar_diskon = tambahan_diskon::daftar_tambahan_diskon(  array(), $data_dealer["order_id"], true );
+	while( $daftar_diskon = sqlsrv_fetch_array($rs_daftar_diskon) ){		
+	
+		// tambah baru
+		if( @$_POST["cb_" . $daftar_diskon["diskon_id"]] == $daftar_diskon["diskon_id"] && $daftar_diskon["order_diskon"] == "" ){
+			$arr_col = array();
+			$arr_col["user_id"] = "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'";
+			$arr_col["order_id"] = "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'";
+			$arr_col["diskon_id"] = "'" . main::formatting_query_string( $daftar_diskon["diskon_id"] ) . "'";
+			tambahan_diskon::insert_order_diskon( $arr_col );
+		}
+		
+		// hapus
+		if( @$_POST["cb_" . $daftar_diskon["diskon_id"]] == "" ){
+			$arr_parameter = array();
+			$arr_parameter["user_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'" );
+			$arr_parameter["order_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'" );
+			$arr_parameter["diskon_id"] = array("=", "'" . main::formatting_query_string( $daftar_diskon["diskon_id"] ) . "'" );
+			tambahan_diskon::hapus_order_diskon( $arr_parameter );
+			
+			// cek apakah berasal dari splitting item_seq baru untuk diskon tambahan, hapus apabila item_seq tambahan dan nilainya diupdate ke item_seq_asal-nya
+			$rs_order = sql::execute( order::sql_order_item_simpel( $data_dealer["order_id"] ) ) ;
+			while( $order = sqlsrv_fetch_array( $rs_order ) ){
+				if( $order["item_seq_asal"] != "" )	order::item_tambahan_diskon( $order, 0, 0 );
+			}
+			
+		}
+			
+	}
+	
+}elseif( $_REQUEST["c"] == "pilih_itemorder" ){
+
+	$parameter["a.dealer_id"] = array("=", "'". main::formatting_query_string( $_POST["dealer_id"] ) ."'");
+	$parameter["a.order_id"] = array("=", "'". main::formatting_query_string( $_POST["order_id"] ) ."'");
+	//$rs_order = sql_dm::browse_cart( $parameter );
+	$rs_order = sql::execute( order::sql_order_item_simpel( $_POST["order_id"] ) );
+	
+	$arr_order_diskon_item = array();
+	$rs_order_diskon_item = sql::execute( order::sql_order_diskon_item_simpel( $_POST["order_id"], $_POST["diskonid"] ) );
+	while( $order_diskon_item = sqlsrv_fetch_array( $rs_order_diskon_item ) )
+		$arr_order_diskon_item[] = $order_diskon_item["item_seq"];
+
+	while( $order = sqlsrv_fetch_array( $rs_order ) ){
+
+		if( @$_POST[ "b_cb_" . $order["item_seq"] ] != "" && ( $order["order_diskon_item"] == "" || $order["order_diskon_item"] == $order["item_seq"] ) ){
+
+			//if( $order["order_diskon_item"] == $order["item_seq"] ) continue; // tidak bisa double diskon
+			//if( $order["order_diskon_item"] == $order["item_seq"] && $order["diskon_id"] == $_POST["diskonid"] ){ //hapus dulu baru entri ulang continue; // biar tidak error primary key
+			if( in_array( $order["item_seq"], $arr_order_diskon_item ) ){ //hapus dulu baru entri ulang continue; // biar tidak error primary key
+				
+				$arr_parameter = array();
+				$arr_parameter["user_id"] = array("=", "'". main::formatting_query_string( $data_dealer["user_id"] ) ."'");
+				$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+				$arr_parameter["diskon_id"] = array("=", "'". main::formatting_query_string( $_POST["diskonid"] ) ."'");
+				$arr_parameter["item_seq"] = array("=", "'". main::formatting_query_string( $order["item_seq"] ) ."'");
+				
+				tambahan_diskon::hapus_order_diskon_item( $arr_parameter );		
+				
+				// cek apakah berasal dari splitting item_seq baru untuk diskon tambahan, hapus apabila item_seq tambahan dan nilainya diupdate ke item_seq_asal-nya
+				//if( $order["item_seq_asal"] != "" ){
+				//	order::item_tambahan_diskon( $order, 0, 0 );
+				//}
+				
+			}
+
+			$kuantitas_diskon_item = $_POST[ "q_" . $order["item_seq"] ] != "" && $_POST[ "q_" . $order["item_seq"] ] > 0 ? $_POST[ "q_" . $order["item_seq"] ] : 1;
+			if ( (int) $kuantitas_diskon_item > $order["kuantitas"] ) $kuantitas_diskon_item = 1;
+			
+			elseif( (int) $kuantitas_diskon_item < $order["kuantitas"] ){ //buat item_seq baru untuk diskon tambahan
+				$item_tambahan_diskon = order::item_tambahan_diskon( $order, $kuantitas_diskon_item );
+
+				if( @$item_tambahan_diskon["item_seq"] != "" ) 
+					$order["item_seq"] = $item_tambahan_diskon["item_seq"];
+			}
+			
+			$arr_parameter = array();
+			$arr_parameter["user_id"] = "'". main::formatting_query_string( $data_dealer["user_id"] ) ."'";
+			$arr_parameter["order_id"] = "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'";
+			$arr_parameter["diskon_id"] = "'". main::formatting_query_string( $_POST["diskonid"] ) ."'";
+			$arr_parameter["item_seq"] = "'". main::formatting_query_string( $order["item_seq"] ) ."'";
+			$arr_parameter["kuantitas_diskon_item"] = "'". main::formatting_query_string( $kuantitas_diskon_item ) ."'";
+			
+			tambahan_diskon::insert_order_diskon_item( $arr_parameter );
+			
+		} else {
+			
+			$arr_parameter = array();
+			$arr_parameter["user_id"] = array("=", "'". main::formatting_query_string( $data_dealer["user_id"] ) ."'");
+			$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+			$arr_parameter["diskon_id"] = array("=", "'". main::formatting_query_string( $_POST["diskonid"] ) ."'");
+			$arr_parameter["item_seq"] = array("=", "'". main::formatting_query_string( $order["item_seq"] ) ."'");
+			
+			tambahan_diskon::hapus_order_diskon_item( $arr_parameter );			
+			
+			// cek apakah berasal dari splitting item_seq baru untuk diskon tambahan, hapus apabila item_seq tambahan dan nilainya diupdate ke item_seq_asal-nya
+			if( $order["item_seq_asal"] != "" ){
+				order::item_tambahan_diskon( $order, 0, 0 );
+			}
+			
+		}
+		
+	}
+
+}elseif( $_REQUEST["c"] == "hapus_itemorder"  || $_REQUEST["c"] == "hapus_itemorder_bqtq" ){ 
+
+Hapus_ItemOrder:
+		
+		$arr_parameter = array();
+		$arr_parameter["user_id"] = array("=", "'". main::formatting_query_string( $data_dealer["user_id"] ) ."'");
+		$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+		$arr_parameter["diskon_id"] = array("=", "'". main::formatting_query_string( $_GET["diskonid"] ) ."'");
+		$arr_parameter["item_seq"] = array("=", "'". main::formatting_query_string( $_GET["item_seq"] ) ."'");
+		
+		tambahan_diskon::hapus_order_diskon_item( $arr_parameter );
+		
+		// cek apakah berasal dari splitting item_seq baru untuk diskon tambahan, hapus apabila item_seq tambahan dan nilainya diupdate ke item_seq_asal-nya
+		$order = sqlsrv_fetch_array( sql::execute( order::sql_order_item_simpel( $data_dealer["order_id"], $_GET["item_seq"] ) ) );
+		if( $order["item_seq_asal"] != "" ){
+			order::item_tambahan_diskon( $order, 0, 0 );
+		}
+		
+		if( in_array( "hapus_itemorder_bqtq",  array( @$_REQUEST["c"], @$_REQUEST["sc"] ) ) ){
+			$file_mekanisme_diskon = "mekanisme_prosedur_diskon/". $_REQUEST["diskonid"] .".php";
+			
+			if( file_exists( $file_mekanisme_diskon ) ){
+				include_once $file_mekanisme_diskon;
+						
+				// loading object diskon
+				unset( $arr_parameter );
+				$arr_parameter["a3.dealer_id"] = array( "=", "'" . main::formatting_query_string( $data_dealer["idcust"] ) . "'" );				
+				$arr_parameter["a.order_id"] = array( "=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'" );				
+				$mekanisme_prosedur_diskon = "mekanisme_prosedur_diskon_" . $_REQUEST["diskonid"];
+				$obyek_diskon = ( new $mekanisme_prosedur_diskon($arr_parameter, $readonly) );
+
+				// hapus ulang
+				$arr_parameter = array();
+				$arr_parameter["user_id"] = array("=", "'". main::formatting_query_string( $data_dealer["user_id"] ) ."'");
+				$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+				$arr_parameter["diskon_id"] = array(" in ", "(". implode(",", $obyek_diskon->arr_diskon_id_share_budget() ) .")");
+				$arr_parameter["item_seq"] = array("=", "'". main::formatting_query_string( $_GET["item_seq"] ) ."'");				
+				tambahan_diskon::hapus_order_diskon_item( $arr_parameter );
+
+				unset( $arr_parameter );
+				$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+				$arr_parameter["user_id"] = array("=", "'". main::formatting_query_string( $data_dealer["user_id"] ) ."'");
+				$arr_parameter["diskon_id"] = array(" in ", "(". implode(",", $obyek_diskon->arr_diskon_id_share_budget() ) .")");
+				$arr_parameter["item_bqtq"] = array("=", "'". main::formatting_query_string( $_GET["item_seq"] ) ."'");
+				$arr_parameter["mode_bqtq"] = array("=", 2);		
+				prosedur_khusus_tambahan_diskon::hapus_order_diskon_bqtq( $arr_parameter );
+				
+				unset( $arr_set, $arr_parameter );
+				$arr_set["nilai_diskon"] = array("=", "0");
+				$arr_parameter["user_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'");
+				$arr_parameter["order_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'");
+				$arr_parameter["diskon_id"] = array("=", "'" . main::formatting_query_string( $_REQUEST["diskonid"] ) . "'");
+				$arr_parameter["/*data order diskon item */"] = array("", " not exists(select 1 from order_diskon_item where order_id = ". $arr_parameter["order_id"][1] ." and user_id = ". $arr_parameter["user_id"][1] ." ) ");
+				tambahan_diskon::update_order_diskon( $arr_set, $arr_parameter );				
+				
+			}
+		}
+		
+}elseif( $_REQUEST["c"] == "pilih_itemfree" ) {
+
+		// hapus dulu, klo ada
+		$arr_parameter = array();
+		$arr_parameter["user_id"] = array("=", "'". main::formatting_query_string( $data_dealer["user_id"] ) ."'");
+		$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+		$arr_parameter["diskon_id"] = array("=", "'". main::formatting_query_string( $_GET["diskonid"] ) ."'");
+		$arr_parameter["item_id"] = array("=", "'". main::formatting_query_string( $_GET["item_id"] ) ."'");
+		
+		tambahan_diskon::hapus_order_diskon_itemfree( $arr_parameter );
+		
+		$arr_parameter = array();
+		$arr_parameter["user_id"] = "'". main::formatting_query_string( $data_dealer["user_id"] ) ."'";
+		$arr_parameter["order_id"] = "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'";
+		$arr_parameter["diskon_id"] = "'". main::formatting_query_string( $_GET["diskonid"] ) ."'";
+		$arr_parameter["item_id"] = "'". main::formatting_query_string( $_GET["item_id"] ) ."'";
+		$arr_parameter["harga"] = "'". main::formatting_query_string( $_GET["harga"] ) ."'";
+		$arr_parameter["kuantitas"] = "'". main::formatting_query_string( $_GET["qty"] ) ."'";
+		$arr_parameter["gudang"] = "'". main::formatting_query_string( $_GET["gudang"] ) ."'";
+	
+		tambahan_diskon::insert_order_diskon_itemfree( $arr_parameter );
+		die("<script>location.href='diskon-pengajuan.php?dealer_id=". $_REQUEST["dealer_id"] ."&order_id=". $data_dealer["order_id"] ."'</script>");
+			
+}elseif( $_REQUEST["c"] == "hapus_itemfree"  || $_REQUEST["c"] == "hapus_itemfree_bqtq" ){ 
+
+Hapus_ItemFree:
+		$arr_parameter = array();
+		$arr_parameter["user_id"] = array("=", "'". main::formatting_query_string( $data_dealer["user_id"] ) ."'");
+		$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+		$arr_parameter["diskon_id"] = array("=", "'". main::formatting_query_string( $_GET["diskonid"] ) ."'");
+		$arr_parameter["item_id"] = array("=", "'". main::formatting_query_string( $_GET["item_id"] ) ."'");
+		
+		tambahan_diskon::hapus_order_diskon_itemfree( $arr_parameter );
+		
+		if( in_array( "hapus_itemfree_bqtq",  array( @$_REQUEST["c"], @$_REQUEST["sc"] ) ) ){
+			
+			$file_mekanisme_diskon = "mekanisme_prosedur_diskon/". $_REQUEST["diskonid"] .".php";
+			
+			if( file_exists( $file_mekanisme_diskon ) ){
+				include_once $file_mekanisme_diskon;
+						
+				// loading object diskon
+				unset( $arr_parameter );
+				$arr_parameter["a3.dealer_id"] = array( "=", "'" . main::formatting_query_string( $data_dealer["idcust"] ) . "'" );				
+				$arr_parameter["a.order_id"] = array( "=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'" );				
+				$mekanisme_prosedur_diskon = "mekanisme_prosedur_diskon_" . $_REQUEST["diskonid"];
+				$obyek_diskon = ( new $mekanisme_prosedur_diskon($arr_parameter, $readonly) );
+
+				// hapus ulang
+				$arr_parameter = array();
+				$arr_parameter["user_id"] = array("=", "'". main::formatting_query_string( $data_dealer["user_id"] ) ."'");
+				$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+				$arr_parameter["diskon_id"] = array(" in ", "(". implode(",", $obyek_diskon->arr_diskon_id_share_budget() ) .")");
+				$arr_parameter["item_id"] = array("=", "'". main::formatting_query_string( $_GET["item_id"] ) ."'");				
+				tambahan_diskon::hapus_order_diskon_itemfree( $arr_parameter );
+
+				unset( $arr_parameter );
+				$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+				$arr_parameter["user_id"] = array("=", "'". main::formatting_query_string( $data_dealer["user_id"] ) ."'");
+				$arr_parameter["diskon_id"] = array(" in ", "(". implode(",", $obyek_diskon->arr_diskon_id_share_budget() ) .")");
+				$arr_parameter["item_bqtq"] = array("=", "'". main::formatting_query_string( $_GET["item_id"] ) ."'");
+				$arr_parameter["mode_bqtq"] = array("=", 1);		
+				prosedur_khusus_tambahan_diskon::hapus_order_diskon_bqtq( $arr_parameter );
+			}
+			
+		}
+		
+}elseif( $_REQUEST["c"] == "kirim_pengajuan" ){
+	
+Kirim_Pengajuan:	
+	$parameter["b.order_id"] = array( "=", "'". main::formatting_query_string( $_REQUEST["order_id"] ) ."'" );
+	$parameter["/*b.kirim*/"] = array( "", " b.diskon_id not in (select diskon_id from dbo.ufn_diskon_approval_berjenjang(b.order_id) where  disetujui = 1 or (isnull(disetujui, -1) = -1 and ISNULL(disetujui_oleh, '') <> '' )  ) " );
+	$rs_daftar_diskon = tambahan_diskon::daftar_tambahan_diskon( $parameter );
+
+	$arr_nik = array();
+
+	while( $diskon = sqlsrv_fetch_array( $rs_daftar_diskon ) ){
+		
+		$arr_parameter = array();
+		$arr_parameter["user_id"] = array("=", "'". main::formatting_query_string( $data_dealer["user_id"] ) ."'");
+		$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+		$arr_parameter["diskon_id"] = array("=", "'". main::formatting_query_string( $diskon["diskon_id"] ) ."'");
+		$arr_parameter["disetujui"] = array("", " not in (1) ");
+		tambahan_diskon::hapus_order_diskon_approval( $arr_parameter );
+		
+		$tambahan_diskon_persetujuan = new tambahan_diskon_persetujuan( $data_dealer["order_id"], $diskon["diskon_id"] );
+
+		$counter_nik_berjenjang = 0;
+		if( is_array( $tambahan_diskon_persetujuan->posisi ) && count( $tambahan_diskon_persetujuan->posisi ) >0 )
+			foreach( $tambahan_diskon_persetujuan->posisi as $index=>$posisi ){
+				
+				if( $counter_nik_berjenjang < 1 )
+				$arr_nik[ $tambahan_diskon_persetujuan->nik[ $index ] ] = array($posisi, $tambahan_diskon_persetujuan->email[ $index ]);
+				
+				unset($arr_parameter["disetujui"]);
+				$arr_parameter["urutan"] = array("=", "'" . main::formatting_query_string( $index ) . "'");
+				$rs_check_order_diskon_approval = tambahan_diskon_persetujuan::order_diskon_persetujuan( $arr_parameter );
+				if( sqlsrv_num_rows( $rs_check_order_diskon_approval ) > 0 ) {
+					unset( $arr_nik[ $tambahan_diskon_persetujuan->nik[ $index ] ] );
+					continue;
+				}
+				
+				$arr_col = array();
+				$arr_col["user_id"] = "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'";
+				$arr_col["order_id"] = "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'";
+				$arr_col["diskon_id"] = "'" . main::formatting_query_string( $diskon["diskon_id"] ) . "'";
+				$arr_col["urutan"] = "'" . $index . "'";
+				$arr_col["disetujui_posisi"] = "'" . $posisi . "'";
+				$arr_col["disetujui_oleh"] = "'" . $tambahan_diskon_persetujuan->nik[ $index ] . "'";
+				$arr_col["disetujui_email"] = "'" . $tambahan_diskon_persetujuan->email[ $index ] . "'";
+				tambahan_diskon::insert_order_diskon_approval( $arr_col );
+				
+				$counter_nik_berjenjang++;
+			}
+		else{
+		
+			$arr_col = array();
+			$arr_col["user_id"] = "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'";
+			$arr_col["order_id"] = "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'";
+			$arr_col["diskon_id"] = "'" . main::formatting_query_string( $diskon["diskon_id"] ) . "'";
+			$arr_col["urutan"] = "0";
+			$arr_col["disetujui"] = "1";
+			tambahan_diskon::insert_order_diskon_approval( $arr_col );
+			
+		}			
+		
+	}
+
+	foreach( $arr_nik as $nik=>$posisi_email ){
+		list( $posisi, $email) = $posisi_email;
+		tambahan_diskon_persetujuan::kirim_email_persetujuan( $data_dealer["idcust"], $data_dealer["namecust"], $data_dealer["order_id"], $email, $nik );		
+	}
+	if( count( $arr_nik ) <= 0 )
+		die("<script>location.href='transaksi-3.php?c=kirim_order&order_id=". $data_dealer["order_id"] ."';</script>");
+	else
+		die("<script>location.href='diskon-pengajuan-berhasil.php?diskon_pengajuan=". sha1(rand(0, 1000)) ."&order_id=". $data_dealer["order_id"] ."';</script>");
+	
+}elseif( $_REQUEST["c"] == "persetujuan_diskon" ){
+
+	// cek order sudah dikirimkan atau belum
+	unset( $parameter );
+	$parameter["a.order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+	$rs_cek_order = order::daftar_order( $parameter );
+	if( sqlsrv_num_rows( $rs_cek_order ) <= 0 ) die("<script>alert('Data order tidak ditemukan!');window.close();</script>");
+	
+	$cek_order = sqlsrv_fetch_array( $rs_cek_order );
+	if( $cek_order["kirim"] == "1" ) die("<script>alert('Order sudah dikirimkan ke ACCPAC!\\nPersetujuan diskon tambahan sudah tidak diperlukan lagi.');window.close();</script>");
+	
+	
+	// cek persetujuan sudah dilakukan atau belum
+	unset( $parameter );
+	$parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+	$parameter["diskon_id"] = array("=", "'". main::formatting_query_string( $_REQUEST["diskon_id"] ) ."'");
+	$parameter["disetujui_oleh"] = array("=", "'". main::formatting_query_string( $_REQUEST["nik"] ) ."'");
+	$rs_cek_persetujuan = tambahan_diskon_persetujuan::order_diskon_persetujuan( $parameter );
+	if( sqlsrv_num_rows( $rs_cek_persetujuan ) <= 0 ) die("<script>alert('Data pengajuan diskon tambahan tidak ditemukan!');window.close();</script>");
+	
+	$cek_persetujuan = sqlsrv_fetch_array( $rs_cek_persetujuan );
+	if( $cek_persetujuan["disetujui"] != "" ) die("<script>alert('Data pengajuan diskon tambahan sudah mendapatkan persetujuan!');window.close();</script>");
+	
+	
+	// cek kuantitas sebelum persetujuan, utk memastikan item masih dalam stok tersedia
+	unset( $parameter );
+	$parameter["a.dealer_id"] = array("=", "'". main::formatting_query_string( $data_dealer["idcust"] ) ."'");
+	$parameter["a.order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+	$rs_order = sql_dm::browse_cart( $parameter );
+	while( $order = sqlsrv_fetch_array($rs_order) )	$arr_semua_item[ $order["item_seq"] ] = "'" . $order["item_id"] . "'";
+	
+	// browse free item yg berasal dari pengajuan diskon tambahan
+	unset( $parameter );	
+	$arr_free_item_tambahan = array();
+	$parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+	$rs_free_item = sql_dm::browse_free_item_cart( $parameter );
+	while( $free_item = sqlsrv_fetch_array( $rs_free_item ) )		$arr_free_item_tambahan[] = "'" . $free_item["item_id"] . "'";
+	if( count( $arr_free_item_tambahan ) > 0 ) $string_sql_parameter_tambahan = "or b.itemno in ( ". implode(",", array_values( $arr_free_item_tambahan )) ." )";
+	
+	// cari harga net item free & nilai stok tersedia
+	$arr_replace_sql[ "/*ITEMNO*/" ] = " and ( b.itemno in ( ". implode(",", array_values( $arr_semua_item )) ." ) ". @$string_sql_parameter_tambahan ." ) ";
+	$arr_replace_sql[ "/*LOCATION*/" ] = trim(strtoupper(@$data_dealer["cabang"]));
+	$_SESSION["order_id"] = $data_dealer["order_id"];
+	$rs_harga_free_item = sql::execute( str_replace( array_keys( $arr_replace_sql ), array_values( $arr_replace_sql ), order::sql_item_info( $data_dealer["disc"] )  ) );
+	unset( $_SESSION["order_id"] );
+	while( $daftar_item_free_item = sqlsrv_fetch_array( $rs_harga_free_item ) ){
+		@$arr_stok_item[ $daftar_item_free_item["itemno"] ] += $daftar_item_free_item["qty_lokal"];
+		$arr_nama_item[ $daftar_item_free_item["itemno"] ] = $daftar_item_free_item["desc"];
+	}
+	
+	// cek ulang nilai stok tersedia vs unit pembelian	
+	unset($arr_stok_item);
+	$rs_cek_stok = order::cek_cek_stok_item_order($data_dealer["order_id"]);
+	while( $cek_stok = sqlsrv_fetch_array($rs_cek_stok) )
+		@$arr_stok_item[ $cek_stok["item_id"] ] = $cek_stok["kuantitas"];
+	
+	$string_peringatan_stok_kosong = order::cek_stok_kosong( $data_dealer, $arr_stok_item );
+			
+	/*if( $string_peringatan_stok_kosong != "" ){	
+				
+		tambahan_diskon_persetujuan::kirim_email_tanggapan( $data_dealer["idcust"], $data_dealer["order_id"], $_REQUEST["diskon_id"], $string_peringatan_stok_kosong );			
+		die("<script>alert('Pengajuan otomatis dibatalkan karena terdapat perubahan stok item dalam order!\\nEmail telah dikirimkan juga ke sales bersangkutan untuk melakukan review order ini.');window.close();</script>");
+	
+	}*/		
+
+	$arr_set["disetujui"] = array("=", "'". main::formatting_query_string( $_REQUEST["mode"] ) ."'");
+	$arr_set["disetujui_tanggal"] = array("=", "getdate()");
+	$arr_set["disetujui_keterangan"] = array("=", "'". main::formatting_query_string( @$_REQUEST["keterangan"] ) ."'");
+	
+	$arr_parameter["user_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'");
+	$arr_parameter["order_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'");
+	$arr_parameter["diskon_id"] = array("=", "'" . main::formatting_query_string( $_REQUEST["diskon_id"] ) . "'");
+	$arr_parameter["disetujui_oleh"] = array("=", "'" . main::formatting_query_string( $_REQUEST["nik"] ) . "'");
+	
+	tambahan_diskon::update_order_diskon_approval( $arr_set, $arr_parameter );
+	
+	if( $_REQUEST["mode"] == "1" ){ 
+	
+		unset( $arr_set, $arr_parameter );
+		
+		$arr_set["disetujui"] = array("=", "'". main::formatting_query_string( $_REQUEST["mode"] ) ."'");
+		
+		$arr_parameter["user_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'");
+		$arr_parameter["order_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'");
+		$arr_parameter["diskon_id"] = array("=", "'" . main::formatting_query_string( $_REQUEST["diskon_id"] ) . "'");
+		
+		tambahan_diskon::update_order_diskon( $arr_set, $arr_parameter );		
+	}
+	
+	// cek utk persetujuan berjenjang
+	unset( $arr_parameter );
+	$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+	$arr_parameter["diskon_id"] = array("=", "'" . main::formatting_query_string( $_REQUEST["diskon_id"] ) . "'");	
+	$arr_parameter["disetujui"] = array("", " is NULL ");	
+	$rs_check_persetujuan_berjenjang = tambahan_diskon_persetujuan::order_diskon_persetujuan( $arr_parameter );
+	if(  sqlsrv_num_rows( $rs_check_persetujuan_berjenjang ) > 0 ){
+		$persetujuan_berjenjang = sqlsrv_fetch_array( $rs_check_persetujuan_berjenjang );
+		
+		if( $_REQUEST["mode"] == "0" )
+			tambahan_diskon_persetujuan::kirim_email_tanggapan( $_REQUEST["dealer_id"], $data_dealer["order_id"], $_REQUEST["diskon_id"], "&nbsp;" );
+		else
+			tambahan_diskon_persetujuan::kirim_email_persetujuan( $data_dealer["idcust"], $data_dealer["namecust"], $data_dealer["order_id"], $persetujuan_berjenjang["disetujui_email"], $persetujuan_berjenjang["disetujui_oleh"] );			
+		
+		if( isset( $_REQUEST["sc"] ) ){
+			$tambahan_kueri_string = "&sc=". sha1(rand(0, 1000));
+			$tambahan_script = "try{opener.document.location.reload();}catch(e){location.href='diskon-persetujuan.php?dealer=". $_REQUEST["dealer_id"] ."&order_id=".$data_dealer["order_id"]."'}";
+		}
+		die("<script>". @$tambahan_script ."alert('Persetujuan berhasil direkam di database!');window.close();</script>");
+	}
+	
+	// untuk yg melakukan persetujuan terakhir -> kirim email notifikasi dan entri ke ACCPAC, 
+	// dengan mengecek diskon belum mendapatkan persetujuan atau diskon yg tidak disetujui (memberi kesempatan utk revisi pengajuan diskon).
+	unset( $arr_parameter );
+	$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+	$arr_parameter["/*disetujui*/"] = array("", " (disetujui is NULL or disetujui = '0') ");	
+	$rs_check_sisa_persetujuan = tambahan_diskon_persetujuan::order_diskon_persetujuan( $arr_parameter );
+	
+	if( isset( $_REQUEST["sc"] ) ){
+		$tambahan_kueri_string = "&sc=". sha1(rand(0, 1000));
+		$tambahan_script = "try{opener.document.location.reload();}catch(e){location.href='diskon-persetujuan.php?dealer=". $_REQUEST["dealer_id"] ."&order_id=".$data_dealer["order_id"]."'}";
+	}
+		
+	if( sqlsrv_num_rows( $rs_check_sisa_persetujuan ) <= 0 ){		
+		
+		// kirim order ke accpac hanya untuk order yg disetujui diskon tambahannya saja
+		if( $_REQUEST["mode"] == "1" ){
+			
+			// klo ada stok kosong, jangan kirim ke ACCPAC
+			if( $string_peringatan_stok_kosong != "" ){	
+				
+				tambahan_diskon_persetujuan::kirim_email_tanggapan( $data_dealer["idcust"], $data_dealer["order_id"], "", $string_peringatan_stok_kosong );
+				tambahan_diskon_persetujuan::kirim_email_tanggapan( $data_dealer["idcust"], $data_dealer["order_id"], "", "NODISKON" );
+				die("<script>alert('Terdapat perubahan stok item dalam order!\\nEmail telah dikirimkan juga ke sales terkait untuk melakukan review order ini.');window.close();</script>");
+			
+			}
+			
+			header("location:transaksi-3.php?c=kirim_order_daripersetujuan". @$tambahan_kueri_string ."&order_id=". $data_dealer["order_id"]);
+		}else
+			tambahan_diskon_persetujuan::kirim_email_tanggapan( $_REQUEST["dealer_id"], $data_dealer["order_id"], $_REQUEST["diskon_id"], "&nbsp;" );
+
+			//die("<script>location.href='transaksi-3.php?c=kirim_order_daripersetujuan". @$tambahan_kueri_string ."&order_id=". $data_dealer["order_id"] ."'</script>");			
+	}else{
+		// apabila ada satu yg tidak setujui, maka langsung berikan info ke sales/bm
+		if( $_REQUEST["mode"] == "0" )
+			tambahan_diskon_persetujuan::kirim_email_tanggapan( $_REQUEST["dealer_id"], $data_dealer["order_id"], $_REQUEST["diskon_id"], "&nbsp;" );
+	}
+	
+	die("<script>". @$tambahan_script ."alert('Persetujuan berhasil direkam di database!');window.close();</script>");
+	
+}
+
+Skip_Semua:
+
+?>

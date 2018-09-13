@@ -1,0 +1,67 @@
+<?
+
+// load dealer
+$_POST["sc"] = "cl";
+//$_POST["kode_sales"] = $_SESSION["sales_kode"];
+//$_POST["kode_dealer"] = $_REQUEST["dealer_id"];
+
+include_once "dealer.php";
+$rs_dealer = sql::execute( $sql );
+$data_dealer = sqlsrv_fetch_array( $rs_dealer ) or die("Gagal mendapatkan data dealer!");
+
+//if( $data_dealer["order_id"] == "" ||  $data_dealer["kode_sales"] != $_SESSION["sales_kode"] )
+//	$data_dealer["order_id"] = order::orderid( $data_dealer["idcust"], 0 /*$data_dealer["disc"]*/ );
+$data_dealer["order_id"] = $_REQUEST["order_id"];
+
+// nilai total order
+$nominal_order = order::nominal_order( "", array( "b.order_id" => array("=",  "'". $data_dealer["order_id"] ."'" ) ) );
+
+// daftar tambahan diskon
+$list_diskon = "";
+$counter = 1;
+$template_diskon = file_get_contents("template/diskon.html");
+
+$rs_daftar_diskon = tambahan_diskon::daftar_tambahan_diskon( array(), $data_dealer["order_id"], true );
+
+$counter_belum_diterapkan = 0;
+
+while( $diskon = sqlsrv_fetch_array( $rs_daftar_diskon ) ){
+	
+	// filter penampilan diskon sesuai dengan kondisi order
+	$bisa_terapkan = true;
+	$mekanisme_filter_diskon = __DIR__ . "/mekanisme_filter_diskon/" . $diskon["diskon_id"] . ".php";
+	if( file_exists( $mekanisme_filter_diskon ) )
+		require_once $mekanisme_filter_diskon;
+	if( !$bisa_terapkan || $diskon["aktif_diskon"] != "1" ) continue;
+	
+	if( $diskon["order_diskon"] == "" ) $counter_belum_diterapkan++;
+		
+	$arr["#kelas#"] = $counter % 2 == 0 ? 1 : 2;
+	$arr["#counter#"] = $counter;
+	$arr["#diskon-label#"] = $diskon["diskon"];
+	$arr["#diskonid#"] = $diskon["diskon_id"];
+	$arr["#diskon#"] = $diskon["default_nilai"];
+	$arr["#opsi_tampilan-pilih-item#"] = "sembunyikan";
+	$arr["#opsi_tampilan-pilih-free#"] = "sembunyikan" ;
+	$arr["#diskon-label-keterangan#"] = $diskon["keterangan_diskon"] != "" ? "<br />" . $diskon["keterangan_diskon"] : "";
+	$arr["#display-nilai-diskon#"] = "none";
+	$arr["#diskon-keterangan#"] = "";
+	$tambahan_diskon_persetujuan = new tambahan_diskon_persetujuan( $data_dealer["order_id"], $diskon["diskon_id"] );
+	$arr["#persetujuan-melalui#"] = count( $tambahan_diskon_persetujuan->posisi ) > 0 ? implode(", ", $tambahan_diskon_persetujuan->posisi ) : 'Tidak memerlukan persetujuan';
+	unset($tambahan_diskon_persetujuan);
+	$arr["#display-persetujuan#"] = "none";
+	
+	if( $diskon["order_diskon"] == $diskon["diskon_id"] ){
+		$arr["#checked-cb#"] = "checked";
+		$arr["#diskon-diterapkan#"] = "diskon-diterapkan";
+	}else {
+		$arr["#checked-cb#"] = "";
+		$arr["#diskon-diterapkan#"] = "";
+	}
+
+	$list_diskon .= str_replace( array_keys( $arr ), array_values( $arr ), $template_diskon );
+	
+	$counter++;
+}
+
+?>

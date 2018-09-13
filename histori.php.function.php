@@ -1,0 +1,65 @@
+<?
+
+if( @$_REQUEST["c"] == "" ) goto SkipCommand;
+
+if( $_REQUEST["c"] == "cari_order" ){
+	
+	$arr_parameter["a.user_id"] = array( "=", "'" . main::formatting_query_string( $_SESSION["sales_id"] ) . "'");
+	//$arr_parameter["a.kirim"] = array( "=", "'1'");
+	$arr_parameter["/*a.kirim*/"] = array( "", " ( a.kirim = '1' or a.pengajuan_diskon = '1' ) ");
+	if( @$_REQUEST["awal"] != "" ) {
+		$arr_parameter["convert(date, convert(varchar, a.tanggal, 101) )"] = array( ">=", "convert(date, '" . main::formatting_query_string( $_REQUEST["awal"] ) . "' )");
+		$awal_formatted = main::date_from_jquery_to_string( $arr_month,  $_REQUEST["awal"]);
+	}
+	if( @$_REQUEST["akhir"] != "" ) {
+		$arr_parameter["convert(date, convert(varchar, a.tanggal, 101) )"] = array( "<=", "convert(date, '" . main::formatting_query_string( $_REQUEST["akhir"] ) . "' )");
+		$akhir_formatted = main::date_from_jquery_to_string( $arr_month,  $_REQUEST["akhir"]);
+	}
+	/* 
+	echo "<pre>\n";
+	print_r($arr_parameter);
+	echo "</pre>\n"; */
+	$rs_order = order::daftar_order_histori( $arr_parameter );
+	
+	if( sqlsrv_num_rows( $rs_order ) > 0 ){
+		
+		$template = file_get_contents("template/data-order.html");
+		$counter = 1;
+		$data_order = "<div>Sebanyak ". sqlsrv_num_rows( $rs_order ) ." data order ditemukan.</div>";
+		
+		while( $order = sqlsrv_fetch_array( $rs_order ) ){
+			$arr["#kelas#"] = $counter % 2 == 0 ? 1 : 2;
+			$arr["#gudang#"] = $order["gudang"];
+			$arr["#order_id#"] = ( $order["order_id_split"] != "" ? $order["order_id_split"] : $order["order_id"] ) . ( $order["po_referensi"] != "" ? " (PO : ". $order["po_referensi"] .") " : "" ) ;
+			$arr["#link_order_id#"] = $order["order_id"] . ( $order["order_id_split"] != "" ? "&order_id_split=" . $order["order_id_split"] : "" );
+			$arr["#tanggal#"] = $order["tanggal"]->format("d") . " " . $arr_month[ (int)$order["tanggal"]->format("m") ] . " " . $order["tanggal"]->format("Y");
+			$arr["#kode_dealer#"] = $order["dealer_id"];
+			$arr["#nama_dealer#"] = $order["namecust"];
+			
+			if( $order["nilai_order"] == "" || $order["nilai_order"] <= 0 ){
+
+				unset( $arr_parameter );
+				$arr_parameter = array( "b.order_id" => array("=",  "'". main::formatting_query_string( $order["order_id"] ) ."'" ) ) + 
+					( $order["order_id_split"] != "" ? array("a.gudang" => array("=", "'". main::formatting_query_string( $order["gudang"] ) ."'") ) : array() );
+
+				$nominal_order = order::nominal_order( $order["dealer_id"], $arr_parameter );
+				$order["nilai_order"] = $nominal_order["nominal_order_net"];
+			}
+			
+			$arr["#nilai_order#"] = main::number_format_dec( $order["nilai_order"] );
+			
+			$string_keterangan = "";
+			if( $order["kirim"] == 0 && $order["pengajuan_diskon"] == 1 ) $string_keterangan = "<strong><span class=\"tanda-seru\">!</span>Dalam proses pengajuan diskon tambahan.</strong><br />";
+			$arr["#keterangan#"] = $string_keterangan;
+			
+			$data_order .= str_replace( array_keys( $arr ), array_values( $arr ), $template );
+			$counter++;
+		}
+		
+	}else $data_order = "Tidak ada data ditemukan!";
+	
+}
+
+SkipCommand:
+
+?>

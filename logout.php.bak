@@ -1,0 +1,15 @@
+<?
+include "includes/top_blank.php";
+
+unset(
+	$_SESSION["user_login"],
+	$_SESSION["sales_id"],
+	$_SESSION["sales_kode"],
+	$_SESSION["nama_lengkap"],
+	$_SESSION["cabang"]
+);
+
+echo "<script>location.href='login.php'</script>";
+
+include "includes/bottom.php";
+?>

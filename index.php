@@ -1,0 +1,5 @@
+<?
+
+header("location:sales.php");
+
+?>

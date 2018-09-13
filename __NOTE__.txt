@@ -1,0 +1,71 @@
+/TEMPLATE
+item.html
+item-gudanglain.html +
+item-non-paket.html
+item-paket.html
+item-free.html
+data-order.html
+diskon-itemfree.html
+diskon-itemfree-readonly.html
+diskon-item.html
+diskon-item-readonly.html
+daftar-item.html
+daftar-item-table.html
+diskon-approval-header.html
+
+/SCRIPT
+transaksi-2-item.php.js
+diskon-pengajuan-pilihitemfree.php.js
+transaksi-2-item-gudanglain.php.js +
+histori-detail.php.js
+
+/ROOT
+bm-review-order.php
+transaksi-2-order.php
+transaksi-2.php.function.php
+transaksi-2-item.php.function.php
+transaksi-2-item-gudanglain.php +
+transaksi-2-item-gudanglain.php.function.php +
+transaksi-3.php.command.php
+diskon-pengajuan.php
+diskon-pengajuan.php.function.php
+diskon-pengajuan.php.command.php
+diskon-pengajuan-pilihdiskon.php.function.php
+diskon-pengajuan-pilihitemfree.php
+diskon-pengajuan-pilihitemfree.php.function.php
+diskon-pengajuan-pilihitemorder.php.function.php
+diskon-approval.php
+dealer.php
+transaksi-4.php
+transaksi-4-split.php
+histori.php.function.php
+histori-detail.php
+histori-detail.php.function.php
+__email.php
+__oe_for_sure.php
+
+/LIB
+mainclass.php
+cls_dm.php
+cls_dm_sql.php
+cls_order.php
+cls_diskon.php
+cls_diskon_persetujuan.php
+cls_diskon_persetujuan_split.php +
+cls_order_split.php +
+
+/DB
+alter table [order_item] add [gudang] varchar(10)
+alter table [order_diskon_freeitem] add [gudang] varchar(10)
+alter function ufn_daftar_order_item
+alter proc DM_uspApvOrderD_SGTDAT
+alter proc DM_uspApvOrderH_Post_SGTDAT
+create table [order_split]
+create table [order_item_split]
+create table [gudang_user]
+create proc [usp_order_split]
+create function [ufn_order_split]
+create proc [DM_uspApvOrderH_Post_split_SGTDAT]
+create proc [DM_uspApvOrderD_split_SGTDAT]
+create function sambung_order_id
+create function [ufn_daftar_order_item_split]

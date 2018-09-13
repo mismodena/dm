@@ -1,0 +1,42 @@
+<?
+	
+	$tambahan_script_front_margin_dc_charge = "";
+	
+	$total_order_utk_front_margin_dc_charge = $diskon_front_margin_dc_charge = 0;
+	$total_order_utk_front_margin_dc_charge = $subtotal_noncampaign + $subtotal_campaign + $total_diskon;
+	
+	include_once "lib/cls_prosedur_khusus_tambahan_diskon.php";
+	$front_margin = prosedur_khusus_tambahan_diskon::front_margin_dc_charge( $data_dealer );
+	
+	if( @$front_margin["tradPercentage"] > 0 ){
+		
+		unset($arr_parameter, $arr_col);
+		
+		$front_margin_dc_charge = $front_margin["diskon_id"];
+		
+		// reset semua pengajuan tambahan diskon
+		$arr_parameter["user_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'" );
+		$arr_parameter["order_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'" );
+		$arr_parameter["diskon_id"] = array("=", "'" . main::formatting_query_string( $front_margin_dc_charge ) . "'" );
+		tambahan_diskon::hapus_order_diskon( $arr_parameter );
+		
+		$arr_col["user_id"] = "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'";
+		$arr_col["order_id"] = "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'";
+		$arr_col["diskon_id"] = "'" . main::formatting_query_string( $front_margin_dc_charge ) . "'";
+		$arr_col["nilai_diskon"] = "'" . main::formatting_query_string( $front_margin["tradPercentage"] ) . "'";
+		$arr_col["keterangan_order_diskon"] = "'" . main::formatting_query_string( $front_margin["singkatan"] ) . "'";
+		$arr_col["disetujui"] = "1";
+		tambahan_diskon::insert_order_diskon( $arr_col );
+		
+		$arr_col = array();
+		$arr_col["user_id"] = "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'";
+		$arr_col["order_id"] = "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'";
+		$arr_col["diskon_id"] = "'" . main::formatting_query_string( $front_margin_dc_charge ) . "'";
+		$arr_col["urutan"] = "'1'";
+		$arr_col["disetujui"] = "1";
+		tambahan_diskon::insert_order_diskon_approval( $arr_col );
+		
+		$diskon_front_margin_dc_charge = $total_order_utk_front_margin_dc_charge * $front_margin["tradPercentage"] / 100;
+	}
+
+?>
