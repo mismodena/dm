@@ -11,8 +11,8 @@ if( @$_REQUEST["item"] != "" ){
 			$arr["#item#"] = $item["itemno"];
 			$arr["#harga#"] = main::number_format_dec($item["unitprice"]);
 			$arr["#itemdesc#"] = $item["desc"];
-			$arr["#stok_lokal#"] = $item["qty_lokal"];
-			$arr["#stok_pusat#"] = $item["qty_pst"];
+			$arr["#stok_lokal#"] = "<a href='#'>" . $item["qty_lokal"] . "</a>";
+			$arr["#stok_pusat#"] = "<a href='#'>" .$item["qty_pst"] . "</a>";
 			$display_kedatangan = "none" ;
 			if( $item["estimasi_kedatangan"] != "" ) {
 				$display_kedatangan = "block" ;
