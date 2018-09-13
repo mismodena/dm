@@ -1,0 +1,26 @@
+<?
+include "includes/top.php";
+
+?>
+<a href="transaksi-2.php" style="color:blue">Kembali ke daftar order</a><br /><br />
+<!--Anda sedang melakukan order untuk dealer sebagai berikut :
+<div style="width:100%; background-color:#EEE; border:solid #CCC 1px; margin-top:7px; margin-bottom:7px">
+	<div style="padding:17px">
+		Kode : <?=$data_dealer["idcust"]?><br />
+		Nama Dealer : <?=$data_dealer["namecust"]?><br />
+		<!--Alamat : <?=$data_dealer["addr"]?> <?=$data_dealer["namecity"]?><br />
+		Diskon (%) : <?=$data_dealer["disc"]?>
+	</div>
+</div>-->
+<div style="float:left">
+	<div style="float:right"><img src="images/item.png" border="none" /></div>
+	Cari item 
+	<input type="text" name="item" id="item" value="<?=@$_REQUEST["item"]?>" style="width:107px" /><input type="button" name="b_cari" id="b_cari" value="Cari" onclick="cari_item()" /><br />
+	<input type="checkbox" name="cbx" id="cbx" value="1" <?=@$_REQUEST["cbx"] == "1" || !isset($_REQUEST["cbx"]) ? "checked" : "" ?> /><label for="cbx">Hanya item dengan stok lokal lebih dari 0 (nol) unit.<br />Ketersediaan stok lokal sudah disesuaikan dengan jumlah unit yang sedang dalam proses order ini.</label>
+	<div style="padding-top:17px">
+		<?=@$data_item?>
+	</div>
+</div>
+<?
+include "includes/bottom.php";
+?>

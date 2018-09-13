@@ -1,0 +1,27 @@
+<?
+include "includes/top.php";
+?>
+<a href="javascript:history.back()">Kembali ke halaman sebelumnya</a>
+<div style="float:left; width:100%">
+	<h3>
+		<div style="float:left">Order item <?=$nama_item?></div> 
+		<div style="float:right">NET Rp<?=main::number_format_dec($harga_item)?></div>
+	</h3>
+</div>
+<div style="float:left">
+	<div id="saran_paket">
+		<h3>Saran Paket :</h3>
+		<?=$saran_paket?>
+	</div>
+<div style="margin-top:13px"><strong>NOTE</strong> Hanya bisa mengambil dari gudang dimana terdapat kuantitas order dengan nilai lebih besar daripada nol (0).</div>	
+<h3>Pilih order item dari gudang :</h3>
+<?=$s_data_item?>
+<input type="hidden" id="order_id" value="<?= $data_dealer["order_id"]?>" />
+<input type="hidden" id="item" value="<?=$kode_item?>" />
+<input type="hidden" id="harga" value="<?=$harga_item?>" />
+<input type="hidden" id="dealer_id" value="<?=@$_REQUEST["dealer_id"]?>" />
+<input type="hidden" id="diskonid" value="<?=@$_REQUEST["diskonid"]?>" />
+</div>
+<?
+include "includes/bottom.php";
+?>

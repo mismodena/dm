@@ -1,0 +1,36 @@
+<?
+include "includes/top.php";
+
+unset( $_SESSION["order_no"], $_SESSION["kode_dealer"] );
+
+$rs_order = order::daftar_order( array( "a.order_id" => array("=", "'". @$_REQUEST["order_id"] ."'") ) );
+$data_order = sqlsrv_fetch_array( $rs_order );
+
+if( isset( $_REQUEST["diskon_pengajuan"] ) ){
+	$nominal_order = order::nominal_order( "", array( "b.order_id" => array("=",  "'". $_REQUEST["order_id"] ."'" ), "b.pengajuan_diskon" => array("=",  "'1'" ) ) );
+	 $data_order["nilai_order"] = $nominal_order["nominal_order_net"];
+}
+
+if( @$_REQUEST["split"] != "" && !isset( $_REQUEST["diskon_pengajuan"] ) ){ // hanya untuk order split tanpa pengajuan diskon (langsung kirim accpac)
+	include "transaksi-4-split.php";
+	include "includes/bottom.php";
+	exit;
+}
+?>
+
+<h3>Transaksi Berhasil!</h3>
+<?= isset( $_REQUEST["diskon_pengajuan"] ) ? "<strong>Sedang Dalam Proses Pengajuan Tambahan Diskon<br /></strong>" : "" ?>
+<span class="tanda-seru">!</span>Berikut ringkasan data transaksi Anda:
+<div style="width:100%; background-color:#EEE; border:solid #CCC 1px; margin-top:7px; margin-bottom:17px">
+	<div style="padding:17px">
+		No. Order : <?=$data_order["order_id"]?><br />
+		Kode : <?=$data_order["dealer_id"]?><br />
+		Nama Dealer : <?=$data_order["namecust"]?><br />
+		Nilai Order (Rp) : <?=main::number_format_dec( $data_order["nilai_order"] )?><br />
+	</div>	
+</div>
+<input type="button" id="b_lanjut_order" value="- Order Lanjutan -" onclick="javascript:location.href='transaksi-2.php?dealer=<?=$data_order["dealer_id"]?>'" style="width:49%" />
+<input type="button" id="b_lanjut" value="- Selesai -" onclick="javascript:location.href='sales.php'" style="width:49%" />
+<?
+include "includes/bottom.php";
+?>

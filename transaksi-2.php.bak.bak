@@ -1,0 +1,53 @@
+<?
+include "includes/top.php";
+set_time_limit(60);
+
+echo $style;
+?>
+<a href="transaksi.php" style="color:blue">Kembali ke daftar dealer</a><br /><br />
+<div style="float:right"><img src="images/item.png" border="none" /></div>
+<span class="tanda-seru">!</span>Anda sedang melakukan order pembelian item untuk dealer sebagai berikut :
+<div style="width:100%; background-color:#EEE; border:solid #CCC 1px; margin-top:7px; margin-bottom:7px">
+	<div style="padding:17px">
+		Kode : <?=$data_dealer["idcust"]?><br />
+		Nama Dealer : <?=$data_dealer["namecust"]?><br />
+		<!--Diskon (%) : <?=$data_dealer["disc"]?><br />--><br />
+		<input type="button" id="b_batal" value="Batalkan Order Dealer" onclick="hapus_order('<?=$_SESSION["order_id"]?>')" />
+	</div>	
+</div>
+<div id="overlimit-note" style="width:100%; background-color:#EEE; border:solid #CCC 1px; margin-top:7px; margin-bottom:7px; display:none">
+	<div style="padding:17px">
+		<div style="font-weight:900"><span class="tanda-seru">!</span>Dealer ini telah melebihi limit kredit (Overlimit)</div>
+		<div>Limit kredit dealer : Rp<span id="limit-kredit"></span></div>
+		<div>Piutang + Order sekarang : Rp<span id="piutang+order"></span></div>
+	</div>	
+</div>
+<input type="button" name="b_cari" id="b_cari" value="Cari Item" onclick="javascript:location.href='transaksi-2-item.php'" class="tombol-hijau" />
+<div style="float:left;width:100%; ">
+	<div style="text-align:center; margin-top:17px; border-top:3px double #CCC; border-bottom:3px double #CCC; background-color:#EEE;"><h3>Ringkasan Order</h3></div>
+	<div style="font-weight:bold; line-height:27px;">
+		Total Order : Rp<span id="total-order"></span><br />
+		Total Diskon Campaign : Rp<span id="total-diskon-campaign"></span><br />
+		Total Order Net : Rp<span id="total-order-net"></span><br />
+	</div>
+</div>
+<div style="float:left;width:100%; margin-bottom:17px;">
+	<div style="text-align:center; margin-top:17px; border-top:3px double #CCC; border-bottom:3px double #CCC; background-color:#EEE;"><h3>Detail Order</h3></div>
+	<?=$data_order?>
+</div>
+<?= @$item_stok_habis ? "<span class=\"peringatan\">Mohon ubah data kuantitas item dengan unit pembelian melebihi stok tersedia, sebelum melanjutkan ke proses berikutnya!</span>" : "" ?>	
+<!--<input type="button" name="b_lanjut" id="b_lanjut" value="Lanjutkan Order ke Proses Berikutnya" onclick="location.href='transaksi-3.php'" class="tombol-hijau" <?= $item_stok_habis ? "disabled" : "" ?>/>	-->
+<h3>Keterangan Tambahan</h3>
+<div style="float:left; width:100%; padding-bottom:21px">
+<textarea name="t_keterangan" style="width:100%; height:57px"></textarea>
+</div>
+<h3>Pilih Opsi Transaksi!</h3>
+<div style="float:left; width:100%; line-height:21px">
+	<input type="hidden" name="order_id" id="order_id" value="<?=$data_dealer["order_id"]?>" />
+	<input type="radio" name="r_cek" id="r_cek_1" value="1" checked /><label for="r_cek_1">Kirimkan Order ke Admin Sales (ACCPAC)</label><br />
+	<input type="radio" name="r_cek" id="r_cek_2" value="2" /><label for="r_cek_2" id="label_r_cek_2">Ajukan Penambahan Diskon (Branch Manager - <?=$data_dealer["nama_lengkap_bm"]?>)</label><br />
+	<input type="button" name="b_lanjut" id="b_lanjut" value="Proses" onclick="javascript:lanjut_proses()" class="tombol-hijau" <?= @$item_stok_habis || ($subtotal_noncampaign + $subtotal_campaign) <= 0 ? "disabled" : ""?>/>
+</div>
+<?
+include "includes/bottom.php";
+?>

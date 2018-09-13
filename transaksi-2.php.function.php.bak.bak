@@ -1,0 +1,46 @@
+<?
+
+if( @$_SESSION["kode_dealer"] == "" && @$_REQUEST["dealer"] == "" )
+	die("<script>location.href='transaksi.php'</script>");
+
+// load dealer
+$_POST["sc"] = "cl";
+$_POST["kode_sales"] = $_SESSION["sales_kode"];
+if (@$_REQUEST["dealer"] != "") 
+	$_SESSION["kode_dealer"] = @$_REQUEST["dealer"];
+$_POST["kode_dealer"] = $_SESSION["kode_dealer"];
+$_POST["pengajuan_diskon"] = 0;
+
+include "dealer.php";
+
+$rs_dealer = sql::execute( $sql . " and e.user_id = '". main::formatting_query_string($_SESSION["sales_id"]) ."' " );
+
+if( sqlsrv_num_rows( $rs_dealer ) <= 0 ){
+	order::orderid( $_SESSION["kode_dealer"], 0, true );
+	$rs_dealer = sql::execute( $sql . " and e.user_id = '". main::formatting_query_string($_SESSION["sales_id"]) ."' " );
+}
+
+$data_dealer = sqlsrv_fetch_array( $rs_dealer ) or die("<script>alert('Gagal mendapatkan data dealer!');location.href='transaksi.php';</script>");
+
+// cek order
+if( $data_dealer["order_id"] == "" ||  $data_dealer["user_id"] != $_SESSION["sales_id"] )
+	$data_dealer["order_id"] = order::orderid( $data_dealer["idcust"], 0, true );
+
+$_SESSION["order_id"] = $data_dealer["order_id"];
+
+if( @$_REQUEST["dealer"] =="" &&  @$_SESSION["kode_dealer"] == "")
+	die("<script>alert('Gagal mendapatkan data dealer!');location.href='transaksi.php';");
+
+if( @$_REQUEST["c"] == "" ) goto SkipCommand;
+
+include "transaksi-2.php.command.php";
+
+SkipCommand:
+
+if( $data_dealer["user_id_bm"] == "" ) $style = "<style>#r_cek_2, #label_r_cek_2{display:none}</style>";
+
+$order_id = $_SESSION["order_id"];
+$dm = new order( $order_id );
+include_once "transaksi-2-order.php";
+
+?>

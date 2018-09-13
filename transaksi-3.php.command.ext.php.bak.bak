@@ -1,0 +1,188 @@
+<?
+
+// reset diskon tambahan yang tidak disetujui
+	$arr_parameter = array();
+	$arr_parameter["user_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'" );
+	$arr_parameter["order_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'" );
+	$arr_parameter["disetujui"] = array("<>", "1" );
+	tambahan_diskon::hapus_order_diskon( $arr_parameter );
+	
+	// nominal order
+	$nominal_order = order::nominal_order( $data_dealer["idcust"], array( "b.order_id" => array("=",  "'". $data_dealer["order_id"] ."'" ), "b.kirim" => array("=",  "'1'" ) ) );
+	//$nominal_order_setelah_diskon = $nominal_order["nominal_order"];
+	$nominal_order_setelah_diskon = $nominal_order["nominal_order_net_exc_discfaktur"];
+	
+	// rekap data diskon campaign + diskon tambahan ke kolom order_item.diskon_total
+	// daftar diskon tambahan
+	$arr_tambahan_diskon = array("per faktur" =>0, "per item" => array());
+	
+	$parameter["b.order_id"] = array( "=", "'". $data_dealer["order_id"] ."'" );
+	$parameter["b.disetujui"] = array( "=", "'1'" );
+	$rs_daftar_diskon = tambahan_diskon::daftar_tambahan_diskon( $parameter );
+	
+	while( $diskon = sqlsrv_fetch_array( $rs_daftar_diskon ) ){
+		
+		// update keterangan tambahan diskon, ditambahkan dengan singkatan tambahan diskon di order_diskon.keterangan_order_diskon
+		unset( $arr_set, $parameter );
+		$arr_set["keterangan_order_diskon"] = array("=", " 
+			( 
+				case 
+					when substring(convert(varchar(max), keterangan_order_diskon), 1, ". strlen( $diskon["singkatan"] ) .") = '". $diskon["singkatan"] ."' then convert(varchar(max), keterangan_order_diskon) 
+					else '". main::formatting_query_string( substr( $diskon["singkatan"] . "-" . $diskon["keterangan_order_diskon"], 0, 60 ) ) . "' 
+				end 
+			)" ) ;
+		$arr_parameter["user_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'");
+		$arr_parameter["order_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'");
+		$arr_parameter["diskon_id"] = array("=", "'" . main::formatting_query_string( $diskon["diskon_id"] ) . "'");		
+		tambahan_diskon::update_order_diskon( $arr_set, $arr_parameter );				
+		
+		$parameter = array();
+		$parameter["b.order_id"] = array( "=", "'". $data_dealer["order_id"] ."'" );
+		$parameter["a.diskon_id"] = array( "=", "'". $diskon["diskon_id"] ."'" );
+		unset( $rs_diskon_item );
+		
+		if( $diskon["pilih_item"] == 1 )
+			$rs_diskon_item = tambahan_diskon::daftar_order_diskon_item(  $parameter );
+		
+		elseif( $diskon["gift_diskon"] != 2 )
+			$rs_diskon_item = tambahan_diskon::daftar_order_diskon_itemfree(  $parameter );
+
+		if( isset( $rs_diskon_item ) && sqlsrv_num_rows( $rs_diskon_item ) > 0 ){
+			
+			while( $diskon_item = sqlsrv_fetch_array( $rs_diskon_item ) ){
+				
+				if( isset( $diskon_item["item_seq"] ) )
+					$arr_order_item_diskon_tambahan[ $diskon_item["item_seq"] ] = $diskon["keterangan_order_diskon"];
+
+				$item = isset( $diskon_item["item_seq"] ) ? $diskon_item["item_seq"] : $diskon_item["item_id"];
+				$kuantitas_pengali = $diskon["gift_diskon"] == 1 ? $diskon_item["kuantitas"] : 1;
+				$nilai_diskon = tambahan_diskon::hitung_diskon
+						( 
+							@$diskon_item["item_subtotal"],
+							@$diskon_item["nilai_diskon"] != "" ? @$diskon_item["nilai_diskon"] : @$diskon["default_nilai"]							
+						) * $kuantitas_pengali;
+
+				//$nominal_order_setelah_diskon -= $nilai_diskon;
+				@$arr_tambahan_diskon["per item"][ $item ] += $nilai_diskon;
+				
+				if( !isset( $diskon_item["item_seq"] ) ) continue;
+					
+				// update keterangan tambahan diskon, ditambahkan dengan singkatan tambahan diskon di order_item.keterangan_order_item
+				unset( $arr_set, $parameter );
+				$arr_set["keterangan_order_item"] = array("=", " 
+							( 
+								( case when diskon > 0 then paketid else '' end )+ ( 
+									case 
+										when len( '". main::formatting_query_string( trim( $diskon["singkatan"] ) ) ."' ) > 0 then 
+											( case when len( paketid ) > 0 and diskon > 0 then ',' else '' end )
+											+ '". main::formatting_query_string( trim( $diskon["singkatan"] ) ) ."'
+										else ''
+									end)								
+							)"
+						);
+				$parameter["order_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'");
+				$parameter["user_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'");
+				$parameter["item_seq"] = array("=", "'" . main::formatting_query_string( $diskon_item["item_seq"] ) . "'");
+				sql_dm::update_order_item( $arr_set, $parameter );
+			}						
+			
+		}else{
+
+			if	( $diskon["gift_diskon"] != 1 /*&& $diskon["wajib_pilih_item"] == 0*/ ){
+				$nilai_diskon = tambahan_diskon::hitung_diskon
+					( 
+						$nominal_order_setelah_diskon, 
+						$diskon["nilai_diskon"] != "" ? $diskon["nilai_diskon"] : $diskon["default_nilai"]
+					);
+				$nominal_order_setelah_diskon -= $nilai_diskon;
+				
+				$arr_tambahan_diskon["per faktur"] += $nilai_diskon;
+			}
+			
+		}
+	}
+
+	// update order_item.tambahan_diskon
+	unset( $parameter );
+	$arr_free_item = array();
+	$parameter["a.dealer_id"] = array("=", "'". main::formatting_query_string( $data_dealer["idcust"] ) ."'");
+	$parameter["a.order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+	$rs_order = sql_dm::browse_cart( $parameter );
+	while( $order = sqlsrv_fetch_array($rs_order) ){
+		
+		unset( $arr_set, $parameter );
+		
+		// untuk set harga free item, atau update order_item.keterangan_order_item untuk item dengan tambahan diskon
+		if( $order["harga"] <= 0 ) 
+			$arr_free_item[ $order["item_seq"] ] = "'" . $order["item_id"] . "'";
+		
+		$arr_semua_item[ $order["item_seq"] ] = "'" . $order["item_id"] . "'";
+		
+		if ( @$arr_tambahan_diskon["per item"][ $order["item_seq"] ] != "" )						
+			$arr_set["tambahan_diskon"] = array("=", "'". $arr_tambahan_diskon["per item"][ $order["item_seq"] ] ."'");
+			
+		else
+			$arr_set["tambahan_diskon"] = array("=", "0");
+
+		$parameter["order_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'");
+		$parameter["item_seq"] = array("=", "'" . main::formatting_query_string( $order["item_seq"] ) . "'");
+		
+		sql_dm::update_order_item( $arr_set, $parameter );
+	}
+
+	// browse free item yg berasal dari pengajuan diskon tambahan
+	unset( $parameter );	
+	$arr_free_item_tambahan = array();
+	$parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+	$rs_free_item = sql_dm::browse_free_item_cart( $parameter );
+	while( $free_item = sqlsrv_fetch_array( $rs_free_item ) )		$arr_free_item_tambahan[] = "'" . $free_item["item_id"] . "'";
+	if( count( $arr_free_item_tambahan ) > 0 ) $string_sql_parameter_tambahan = "or b.itemno in ( ". implode(",", array_values( $arr_free_item_tambahan )) ." )";
+
+	// cari harga net item free
+	$arr_replace_sql[ "/*ITEMNO*/" ] = " and ( b.itemno in ( ". implode(",", array_values( $arr_semua_item )) ." ) ". @$string_sql_parameter_tambahan ." ) ";
+	$arr_replace_sql[ "/*LOCATION*/" ] = trim(strtoupper(@$data_dealer["cabang"]));
+	$rs_harga_free_item = sql::execute( str_replace( array_keys( $arr_replace_sql ), array_values( $arr_replace_sql ), order::sql_item_info( $data_dealer["disc"] )  ) );
+	while( $daftar_item_free_item = sqlsrv_fetch_array( $rs_harga_free_item ) ){
+		@$arr_stok_item[ $daftar_item_free_item["itemno"] ] += $daftar_item_free_item["qty_lokal"];
+		$arr_nama_item[ $daftar_item_free_item["itemno"] ] = $daftar_item_free_item["desc"];
+		$arr_harga_free_item[ "'". $daftar_item_free_item["itemno"] . "'" ] = $daftar_item_free_item["unitprice"];
+	}		
+	
+	// update nilai pada kolom harga (harga tidak boleh bernilai 0) dan diskon (diskon = senilai kolom harga), khusus untuk item yang free (harga = 0)
+	foreach( $arr_free_item as $item_seq => $item_id ){
+		unset( $arr_set, $arr_parameter_update );
+		$arr_set["harga"] = array("=", "'". $arr_harga_free_item[ $item_id ] ."'");
+		$arr_set["diskon"] = array("=", " ('". $arr_harga_free_item[ $item_id ] ."' * kuantitas ) ");
+		$arr_parameter_update["order_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'");
+		$arr_parameter_update["user_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'");
+		$arr_parameter_update["item_seq"] = array("=", "'". main::formatting_query_string( $item_seq ) ."'") ;
+		sql_dm::update_order_item( $arr_set, $arr_parameter_update );
+	}
+	
+	// update nilai pada kolom harga (harga tidak boleh bernilai 0), khusus untuk item di tabel order_diskon_freeitem
+	foreach( $arr_free_item_tambahan as $item_id ){
+		unset( $arr_set, $arr_parameter_update );
+		$arr_set["harga"] = array("=", "'". $arr_harga_free_item[ $item_id ] ."'");
+		$arr_parameter_update["order_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'");
+		$arr_parameter_update["user_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'");
+		$arr_parameter_update["item_id"] = array("=", "'" . main::formatting_query_string( $item_id ) . "'");
+		sql_dm::update_order_diskon_freeitem( $arr_set, $arr_parameter_update );
+	}
+	
+	// update order_item.diskon_total  = order_item.diskon + order_item.diskon_total, order_item.diskon_total_persen
+	unset( $arr_set, $parameter );
+	$arr_set["diskon_total"] = array("=", "( diskon + tambahan_diskon )");
+	$arr_set["diskon_total_persen"] = array("=", " ( case when isnull(harga, 0) = 0 then 0 else round( 100 * ( diskon + tambahan_diskon ) / (harga * kuantitas) , 5 ) end ) ");
+	$parameter["order_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'");
+	
+	sql_dm::update_order_item( $arr_set, $parameter );
+	
+	// update order.diskon, order.diskon_nominal (diskon per faktur)
+	unset( $arr_set, $parameter );
+	$arr_set["diskon"] = array("=", 
+		"round( ( convert(float, 100) * convert(float, ". $arr_tambahan_diskon["per faktur"] .") / (select sum( (harga * kuantitas) - diskon_total ) from order_item where order_id = '". main::formatting_query_string( $data_dealer["order_id"] ) ."' ) ), 5 ) ");
+	$arr_set["diskon_nominal"] = array("=", "'". $arr_tambahan_diskon["per faktur"] ."'");
+	$parameter["order_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["order_id"] ) . "'");
+	sql_dm::update_order( $arr_set, $parameter );				
+
+?>

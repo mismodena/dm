@@ -1,0 +1,284 @@
+<?
+
+if( $_REQUEST["c"] =="hapus_order" ){
+	sql_dm::hapus_order( $_REQUEST["order_id"] );
+	echo "<script>location.href='transaksi.php'</script>";
+	exit;
+	
+}elseif( $_REQUEST["c"] == "hapus_item" ){
+	sql_dm::hapus_item( $_REQUEST["item_seq"] );
+	
+	unset( $parameter );
+	$parameter["b.order_id"] = array("=", "'". main::formatting_query_string( $_SESSION["order_id"] ) ."'");
+	$parameter["b.user_id"] = array("=", "'". main::formatting_query_string( $_SESSION["sales_id"] ) ."'");
+	$parameter["b.item_seq"] = array("=", "'". main::formatting_query_string( $_REQUEST["item_seq"] ) ."'");	
+	$paket = sqlsrv_fetch_array( sql_dm::browse_cart( $parameter ) );
+	
+	$dm = new perhitungan_otomatis($_SESSION["order_id"], $_SESSION["sales_id"], $paket["paketid"]);
+
+}elseif( $_REQUEST["c"] == "hapus_campaign" ){
+	sql_dm::hapus_campaign( $_REQUEST["item_seq"] );
+
+	unset( $parameter );
+	$parameter["b.order_id"] = array("=", "'". main::formatting_query_string( $_SESSION["order_id"] ) ."'");
+	$parameter["b.user_id"] = array("=", "'". main::formatting_query_string( $_SESSION["sales_id"] ) ."'");
+	$parameter["b.item_seq"] = array("=", "'". main::formatting_query_string( $_REQUEST["item_seq"] ) ."'");	
+	$paket = sqlsrv_fetch_array( sql_dm::browse_cart( $parameter ) );
+	
+	$dm = new perhitungan_otomatis($_SESSION["order_id"], $_SESSION["sales_id"], $paket["paketid"]);
+
+}elseif( $_REQUEST["c"] == "terapkan_campaign" ){
+	sql_dm::terapkan_campaign( $_REQUEST["item_seq"], $_REQUEST["paketid"] );
+	
+	$dm = new perhitungan_otomatis($_SESSION["order_id"], $_SESSION["sales_id"], $_REQUEST["paketid"]);
+
+}elseif( $_REQUEST["c"] == "ubah_kuantitas" ){
+	sql_dm::ubah_kuantitas( $_REQUEST["item_seq"], $_REQUEST["qty"] );
+	
+	unset( $parameter );unset($_SESSION['pilih_cn']);
+	$parameter["b.order_id"] = array("=", "'". main::formatting_query_string( $_SESSION["order_id"] ) ."'");
+	$parameter["b.user_id"] = array("=", "'". main::formatting_query_string( $_SESSION["sales_id"] ) ."'");
+	$parameter["b.item_seq"] = array("=", "'". main::formatting_query_string( $_REQUEST["item_seq"] ) ."'");	
+	$paket = sqlsrv_fetch_array( sql_dm::browse_cart( $parameter ) );
+	
+	$dm = new perhitungan_otomatis($_SESSION["order_id"], $_SESSION["sales_id"], $paket["paketid"]);
+	die("<script>parent.location.reload();</script>");
+	
+}elseif( $_REQUEST["c"] == "ubah_diskon" ){	
+	unset( $set, $parameter );
+	
+	$_REQUEST["diskon"] = str_replace(",", "", $_REQUEST["diskon"] );
+	if( $_REQUEST["diskon"] < 100 ) $_REQUEST["diskon"] = " (harga * kuantitas * ". $_REQUEST["diskon"] .") / 100 ";
+	
+	$set["diskon"] = array("=", main::formatting_query_string(  $_REQUEST["diskon"]  ) );
+	
+	$parameter["order_id"] = array("=", "'". main::formatting_query_string( $_REQUEST["order_id"] ) ."'");
+	if( $_REQUEST["opsi"] == 1 )
+		$parameter["item_seq"] = array("=", "'". main::formatting_query_string( $_REQUEST["item_seq"] ) ."'");
+	else
+		$parameter["paketid"] = array(" = ", "(select paketid from order_item where order_id = '". main::formatting_query_string( $_REQUEST["order_id"] ) ."' and item_seq = '". main::formatting_query_string( $_REQUEST["item_seq"] ) ."')");
+	
+	sql_dm::update_order_item( $set, $parameter );
+	die("<script>parent.location.reload();</script>");
+	
+}elseif( $_REQUEST["c"] == "reset_diskon" ){
+	unset( $set, $parameter );
+	$set["diskon"] = array("=", "diskon_default" );
+	$parameter["order_id"] = array("=", "'". main::formatting_query_string( $_REQUEST["order_id"] ) ."'");
+	if( $_REQUEST["opsi"] == 1 )
+		$parameter["item_seq"] = array("=", "'". main::formatting_query_string( $_REQUEST["item_seq"] ) ."'");
+	else
+		$parameter["paketid"] = array(" in ", "(select paketid from order_item where order_id = '". main::formatting_query_string( $_REQUEST["order_id"] ) ."' and item_seq = '". main::formatting_query_string( $_REQUEST["item_seq"] ) ."')");
+	
+	sql_dm::update_order_item( $set, $parameter );	
+	die("<script>parent.location.reload();</script>");
+
+}elseif( $_REQUEST["c"] == "kirim_order" ){
+	// klo ada item free .. dimasukkan ke order dan kirim ke accpac
+	// ubah order.order_id yg draft menjadi format nomor order M-XXXX
+	// ubah order.status kirim menjadi 1
+	$dm = new perhitungan_otomatis($data_dealer["order_id"], $_SESSION["sales_id"]);
+	echo "<script>location.href='transaksi.php'</script>";
+	exit;
+	
+}elseif( $_REQUEST["c"] == "proses_order" ){
+	Proses_Order:
+	// cek stok kosong
+	unset( $parameter );
+	$arr_free_item = array();
+	$parameter["a.dealer_id"] = array("=", "'". main::formatting_query_string( $data_dealer["idcust"] ) ."'");
+	$parameter["a.order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+	$rs_order = sql_dm::browse_cart( $parameter );
+	while( $order = sqlsrv_fetch_array($rs_order) ){
+		$arr_semua_item[ $order["item_seq"] ] = "'" . $order["item_id"] . "'";
+		if( $order["harga"] <= 0 ) 
+			$arr_free_item[ $order["item_seq"] ] = "'" . $order["item_id"] . "'";
+	}
+
+	// cari harga net item free & nilai stok tersedia
+	$arr_replace_sql[ "/*ITEMNO*/" ] = " and ( b.itemno in ( ". implode(",", array_values( $arr_semua_item )) ." ) ) ";
+	$arr_replace_sql[ "/*LOCATION*/" ] = trim(strtoupper(@$data_dealer["cabang"]));
+	$rs_harga_free_item = sql::execute( str_replace( array_keys( $arr_replace_sql ), array_values( $arr_replace_sql ), order::sql_item_info( $data_dealer["disc"] )  ) );
+	while( $daftar_item_free_item = sqlsrv_fetch_array( $rs_harga_free_item ) ){
+		@$arr_stok_item[ $daftar_item_free_item["itemno"] ] += $daftar_item_free_item["qty_lokal"];
+		$arr_nama_item[ $daftar_item_free_item["itemno"] ] = $daftar_item_free_item["desc"];
+		$arr_harga_free_item[ "'". $daftar_item_free_item["itemno"] . "'" ] = $daftar_item_free_item["unitprice"];
+	}
+		
+	// cek ulang nilai stok tersedia vs unit pembelian	
+	unset($arr_stok_item);
+	$rs_cek_stok = order::cek_cek_stok_item_order($data_dealer["order_id"]);
+	while( $cek_stok = sqlsrv_fetch_array($rs_cek_stok) )
+		@$arr_stok_item[ $cek_stok["item_id"] ] = $cek_stok["kuantitas"];
+	
+	$string_peringatan_stok_kosong = order::cek_stok_kosong( $data_dealer, $arr_stok_item );
+			
+	if( $string_peringatan_stok_kosong != "" ){			
+		echo $string_peringatan_stok_kosong;
+		include "includes/bottom.php";
+		exit;
+	}
+	
+	// cek khusus untuk dealer modern, harus mengisikan nomor PO
+	if( in_array( trim( $data_dealer["idgrp"] ), explode(",", str_replace("'", "", $arr_dealer_modern) ) )  && trim( $_REQUEST["t_po"] ) == "" ){
+		echo "<script>alert('Khusus untuk dealer Modern, mohon isikan nomor PO referensi!')</script>";
+		goto SKIP_COMMAND;
+	}
+	
+	// cek khusus untuk PO yg diisi, mencegah duplikasi entri PO dan konfirmasi PO
+	if( trim( $_REQUEST["t_po"] ) != "" && @$_REQUEST["sc"] != "pass" ){
+		
+		include_once "transaksi-2.php.po-cek.php";
+		$data_po = cek_po();
+		if( $data_po != "" ) goto SKIP_COMMAND;
+		
+	}
+	
+	// kirimkan langsung ke accpac
+	if( $_REQUEST["r_cek"] == 1 ){
+		
+		$order_id_kirim = trim( order::orderid( $data_dealer["idcust"], $data_dealer["disc"], false ) );	
+		$arr_set["order_id"] = array("=", "'". main::formatting_query_string( $order_id_kirim ) ."'");
+		//$arr_set["kirim"] = array("=", "'1'");
+		$arr_set["tanggal"] = array("=", "getdate()");
+		$arr_set["keterangan_order"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_keterangan"] ) . "'" );
+		$arr_set["nama_kirim"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_nama_konsumen"] ) . "'" );
+		$arr_set["alamat_kirim"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_alamat_konsumen"] ) . "'" );
+		$arr_set["kota_kirim"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_kota_konsumen"] ) . "'" );
+		$arr_set["propinsi_kirim"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_propinsi_konsumen"] ) . "'" );
+		$arr_set["telp_kirim"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_telepon_konsumen"] ) . "'" );
+		$arr_set["hp_kirim"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_hp_konsumen"] ) . "'" );
+		$arr_set["email_kirim"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_email_konsumen"] ) . "'" );
+		$arr_set["po_referensi"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_po"] ) . "'" );
+		if( $_REQUEST["cb_alamat_penagihan"] == 1 ){
+			$arr_set["nama_tagih"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_nama_konsumen"] ) . "'" );
+			$arr_set["alamat_tagih"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_alamat_konsumen"] ) . "'" );
+			$arr_set["kota_tagih"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_kota_konsumen"] ) . "'" );
+			$arr_set["propinsi_tagih"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_propinsi_konsumen"] ) . "'" );
+			$arr_set["telp_tagih"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_telepon_konsumen"] ) . "'" );
+			$arr_set["hp_tagih"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_hp_konsumen"] ) . "'" );			
+		}
+		//$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+		$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $order_id_kirim ) ."'");
+
+		order::tambah_akumulasi_log( $order_id_kirim, $data_dealer["idcust"] );
+		sql_dm::update_order( $arr_set, $arr_parameter );
+
+		echo "<script>location.href='transaksi-3.php?c=kirim_order&order_id=". $order_id_kirim ."';</script>";
+		
+	// ajukan penambahan tambahan order ke BM
+	}else{
+		
+		//$order_id_kirim = $data_dealer["order_id"];		
+		//if( $data_dealer["pengajuan_diskon"] == "1" )	
+		$order_id_kirim = trim( order::orderid( $data_dealer["idcust"], $data_dealer["disc"], false ) );	
+	
+		// update harga = net price, diskon = 100 untuk free item yg berasal dari campaign
+		foreach( $arr_free_item as $item_seq => $item_id ){
+			unset( $arr_set, $arr_parameter_update );
+			$arr_set["harga"] = array("=", "'". $arr_harga_free_item[ $item_id ] ."'");
+			$arr_set["diskon"] = array("=", " ('". $arr_harga_free_item[ $item_id ] ."' * kuantitas ) ");
+			$arr_parameter_update["order_id"] = array("=", "'" . main::formatting_query_string( $order_id_kirim ) . "'");
+			$arr_parameter_update["user_id"] = array("=", "'" . main::formatting_query_string( $data_dealer["user_id"] ) . "'");
+			$arr_parameter_update["item_seq"] = array("=", "'". main::formatting_query_string( $item_seq ) ."'") ;
+			sql_dm::update_order_item( $arr_set, $arr_parameter_update );
+		}
+		
+		unset( $arr_set, $arr_parameter );
+		$arr_set["order_id"] = array("=", "'". main::formatting_query_string( $order_id_kirim ) ."'");
+		$arr_set["pengajuan_diskon"] = array("=", "'1'");
+		$arr_set["tanggal"] = array("=", "getdate()");
+		$arr_set["keterangan_order"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_keterangan"] ) . "'" );
+		$arr_set["nama_kirim"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_nama_konsumen"] ) . "'" );
+		$arr_set["alamat_kirim"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_alamat_konsumen"] ) . "'" );
+		$arr_set["kota_kirim"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_kota_konsumen"] ) . "'" );
+		$arr_set["propinsi_kirim"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_propinsi_konsumen"] ) . "'" );
+		$arr_set["telp_kirim"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_telepon_konsumen"] ) . "'" );
+		$arr_set["hp_kirim"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_hp_konsumen"] ) . "'" );
+		$arr_set["email_kirim"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_email_konsumen"] ) . "'" );
+		$arr_set["po_referensi"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_po"] ) . "'" );
+		if( $_REQUEST["cb_alamat_penagihan"] == 1 ){
+			$arr_set["nama_tagih"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_nama_konsumen"] ) . "'" );
+			$arr_set["alamat_tagih"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_alamat_konsumen"] ) . "'" );
+			$arr_set["kota_tagih"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_kota_konsumen"] ) . "'" );
+			$arr_set["propinsi_tagih"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_propinsi_konsumen"] ) . "'" );
+			$arr_set["telp_tagih"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_telepon_konsumen"] ) . "'" );
+			$arr_set["hp_tagih"] = array("=", "'".main::formatting_query_string( $_REQUEST["t_hp_konsumen"] ) . "'" );			
+		}		
+		//$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $data_dealer["order_id"] ) ."'");
+		$arr_parameter["order_id"] = array("=", "'". main::formatting_query_string( $order_id_kirim ) ."'");
+		order::tambah_akumulasi_log( $order_id_kirim, $data_dealer["idcust"] );
+		sql_dm::update_order( $arr_set, $arr_parameter );		
+		
+		tambahan_diskon_persetujuan::kirim_email_persetujuan( $data_dealer["idcust"], $data_dealer["namecust"], $order_id_kirim, $data_dealer["email_bm"], "" );
+		
+		echo "<script>location.href='transaksi-4.php?order_id=".$order_id_kirim."&diskon_pengajuan=". sha1(rand(1, 00)) ."';</script>";
+		
+	}
+	exit;
+	
+}elseif( $_REQUEST["c"] == "cek_po" || $_REQUEST["c"] == "cek_po_auto_submit" ){
+	
+	include_once "transaksi-2.php.po-cek.php";
+	if( trim($_REQUEST["t_po"]) == "" ) goto SKIP_COMMAND;
+	$_SESSION["t_po"] = trim($_REQUEST["t_po"]);
+	$data_po = cek_po();
+	
+	if( $_REQUEST["c"] == "cek_po_auto_submit" && $data_po == "" ) goto Proses_Order;
+	
+	goto SKIP_COMMAND;
+	
+}elseif( $_REQUEST["c"] == "pilih_dealer" ){
+	
+	// overwrite default cabang, terkait dengan dealer modern yg sales dari pusat dan mengambil stok dari cabang lokasi dealer modernnya
+	$sql = "	select d.cabang from ". $GLOBALS["database_accpac"] ."..ARCUS a, ". $GLOBALS["database_accpac"] ."..MIS_TERRITORY b, [user] c, [user] d where 
+					a.CODETERR = b.territory and b.cabang = c.grup_cabang and c.bm = d.kode_sales and IDCUST = '". main::formatting_query_string( $_SESSION["kode_dealer"] ) ."' and a.IDGRP in (". $arr_dealer_modern .");";
+	$rs_lokasi_cabang_dealer = sql::execute( $sql );
+	if( sqlsrv_num_rows( $rs_lokasi_cabang_dealer ) > 0 ){
+		$lokasi_cabang_dealer = sqlsrv_fetch_array( $rs_lokasi_cabang_dealer );
+		$_SESSION["cabang"] = $lokasi_cabang_dealer["cabang"];
+		
+	}else{
+		// reset ke cabang berdasarkan user
+		//$sql = "select cabang from [user] where kode_sales = '". main::formatting_query_string( $_SESSION["sales_kode"] ) ."'";	
+		$sql = "select cabang from [user] where user_id = '". main::formatting_query_string( $_SESSION["sales_id"] ) ."'";	
+		$rs_lokasi_cabang_user = sql::execute( $sql );
+		$lokasi_cabang_user = sqlsrv_fetch_array( $rs_lokasi_cabang_user );
+		$_SESSION["cabang"] = $lokasi_cabang_user["cabang"];
+		
+	}
+	
+}elseif( $_REQUEST["c"] == "simpan_session" ){
+	
+	$arr_alamat_pengiriman = array(
+				"t_nama_konsumen",
+				"t_alamat_konsumen",
+				"t_kota_konsumen",
+				"t_propinsi_konsumen",
+				"t_telepon_konsumen",
+				"t_hp_konsumen",
+				"t_po"
+			);
+
+	foreach( $arr_alamat_pengiriman as $data_kirim ){
+		if( isset( $_REQUEST[ $data_kirim ] ) )
+			$_SESSION["alamat_kirim"][ $data_kirim ] = $_REQUEST[ $data_kirim ];
+		else{
+			if( isset( $_REQUEST["t_po"] ) )
+				$_SESSION["t_po"] = $_REQUEST["t_po"];
+		}
+	}
+
+	exit;
+	
+}elseif( $_REQUEST["c"] == "pilih_cn" ){
+	$_SESSION["pilih_cn"] = $_REQUEST["f"];	
+}
+
+
+echo "<script>location.href='transaksi-2.php'</script>";
+exit;
+
+SKIP_COMMAND:
+
+?>
