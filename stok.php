@@ -11,6 +11,12 @@ include "includes/top.php";
 		<?=@$data_item?>
 	</div>
 </div>
+<div id="myModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <p></p>
+  </div>
+</div>
 <?
 include "includes/bottom.php";
 ?>
