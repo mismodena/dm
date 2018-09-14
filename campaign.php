@@ -18,7 +18,7 @@ $rs_campaign = campaign::daftar_campaign( $arr_parameter );
 while( $campaign = sqlsrv_fetch_array( $rs_campaign ) ){
 	$s_campaign .= "<li><strong>" . $campaign["campaign"] . "</strong> : " . $campaign["keterangan_campaign"] . "<ul style=\"margin-left:-20px;\">";
 	
-	// daftar paket
+	// daftar paketX
 	$item = "";
 	if( @$_REQUEST["item"] != "" ) $item = " and paketid in (select paketid from paket_item a, ". $database_accpac ."..icitem b where a.item = b.itemno and b.[desc] like '%". $_REQUEST["item"] ."%')";
 	$arr_parameter = array("campaignid" => array("=", "'". main::formatting_query_string($campaign["campaignid"]) ."' ". $item ." ") );	
