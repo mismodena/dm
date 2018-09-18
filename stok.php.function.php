@@ -10,6 +10,7 @@ if( $_REQUEST["draft"] == 1 ){
 	if( sqlsrv_num_rows( $rs_item ) > 0 ){
 		while( $item = sqlsrv_fetch_array($rs_item) ){
 			$arr_draft["item-desc"] = $item["desc"];
+
 			if ($_REQUEST["gudang"]=="GDGPST"){
 				$arr_draft["stock_acc"] =(int) $item["qty_accpac_pusat"];
 				$arr_draft["stock_commit"] =(int) $item["kuantitas_pusat_terambil"] ;
@@ -41,7 +42,10 @@ if( $_REQUEST["draft"] == 1 ){
 		}
 	}
 	$arr_draft["item"] = $data_dealer;
-	echo json_encode($arr_draft, JSON_FORCE_OBJECT);
+
+	
+	$json = json_encode($arr_draft, JSON_FORCE_OBJECT);
+	echo $json;
 	exit();
 
 }
@@ -59,8 +63,8 @@ if( @$_REQUEST["item"] != "" ){
 			$arr["#item#"] = $item["itemno"];
 			$arr["#harga#"] = main::number_format_dec($item["unitprice"]);
 			$arr["#itemdesc#"] = $item["desc"];
-			$arr["#stok_lokal#"] = '<a href="#" onclick=showmodal(\''. $item["itemno"] .'\',\''. $_SESSION['cabang'] .'\')>' . $item["qty_lokal"] . '</a>';
-			$arr["#stok_pusat#"] = '<a href="#" onclick=showmodal(\''. $item["itemno"] . '\',\'GDGPST\')>' .$item["qty_pst"] . '</a>';
+			$arr["#stok_lokal#"] = '<a href="#" onclick=showmodal(\''. $item["itemno"] .'\',\''. $_SESSION['cabang'] .'\',this)>' . $item["qty_lokal"] . '</a>';
+			$arr["#stok_pusat#"] = '<a href="#" onclick=showmodal(\''. $item["itemno"] . '\',\'GDGPST\',this)>' .$item["qty_pst"] . '</a>';
 			$display_kedatangan = "none" ;
 			if( $item["estimasi_kedatangan"] != "" ) {
 				$display_kedatangan = "block" ;
