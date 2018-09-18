@@ -200,6 +200,7 @@ if( is_array( $dm->arr_free_item_paket ) && count( array_keys($dm->arr_free_item
 			$gudang_free_item =array_keys($dm->arr_free_item_paket_gudang[$paketid][$item]);
 
 			$arr_data["#gudang#"] = $gudang_free_item[0]; 
+			$arr_data["#order_id#"] = $order_id; 
 			$arr_data["#display-gudang-non-lokal#"] = trim(strtoupper($gudang_free_item[0])) != trim(strtoupper($_SESSION["cabang"])) ? "block" : "block" ; 
 			$arr_data["#keterangan_kuantitas_tidak_tersedia#"] = $item_stok[ $item ][$gudang] < 0 ? "<sup class=\"peringatan\">Kuantitas free item akan disesuaikan sesuai ketersediaan stok</sup><br />" : "" ; 
 			$arr_data["#paket#"] = "<strong><a href=\"paket-detail.php?paketid=". $paketid ."\" style=\"color:blue;\">" . $paketid . "</a></strong>"; 

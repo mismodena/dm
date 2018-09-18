@@ -20,7 +20,10 @@ class order extends sql_dm{
 					 /*ITEMNO*/";
 		
 		return "			
-			select ltrim(rtrim(b.itemno)) itemno, f.kuantitas_pusat_terambil, g.kuantitas_cabang_terambil,h.kuantitas,
+			select 
+				 l.qtyonhand+l.qtyadnocst+l.qtyrenocst-l.qtyshnocst-l.qtycommit qty_accpac_pusat,
+				 m.qtyonhand+m.qtyadnocst+m.qtyrenocst-m.qtyshnocst-m.qtycommit qty_accpac_cabang,
+				ltrim(rtrim(b.itemno)) itemno, isnull(f.kuantitas_pusat_terambil,0) as kuantitas_pusat_terambil, isnull(g.kuantitas_cabang_terambil,0) as kuantitas_cabang_terambil,h.kuantitas,
 				(select case when convert(int, qtyonhand+qtyadnocst+qtyrenocst-qtyshnocst-qtycommit-isnull(f.kuantitas_pusat_terambil, 0) ) - ( case when h.gudang = 'GDGPST' then isnull( h.kuantitas, 0) else 0 end )  <=0 then 
 							convert(int, qtyonhand+qtyadnocst+qtyrenocst-qtyshnocst-qtycommit-isnull(f.kuantitas_pusat_terambil, 0) ) - ( case when h.gudang = 'GDGPST' then isnull( h.kuantitas, 0) else 0 end )
 					else 
@@ -77,7 +80,12 @@ class order extends sql_dm{
 				) i
 				" :"" ) ."
 				left outer join ( select * from psibj.[dbo].[ufn_psi_itemarrival]() ) j on b.fmtitemno = j.fmtitemno
-
+				outer apply (
+					select * from sgtdat..iciloc where itemno=b.itemno and location='GDGPST'
+				) l
+				outer apply (
+					select * from sgtdat..iciloc where itemno=b.itemno and location='/*LOCATION*/'
+				) m
 				where 
 					c.MODEL is not null and b.ITEMBRKID in ('FG', 'MDS','HD','ACS') and 
 					b.INACTIVE = 0 and b.[DESC] not like '%SAMPLE%' and 
@@ -357,7 +365,16 @@ class order extends sql_dm{
 		if( isset( $order_id_temporary ) )	$_SESSION["order_id"] = $order_id_temporary;
 		return sql::execute( $sql );
 	}
-	
+	static function draft_stock( $item = "", $gudang = ""){
+		$sql = "select a.order_id,a.user_id,a.tanggal,a.kirim,a.pengajuan_diskon,b.item_id,b.kuantitas,b.gudang ";
+		$sql .="from dm..[order] a inner join dm..order_item b ON a.order_id=b.order_id ";
+		$sql .="left join SGTDAT..oeordh c on c.ORDNUMBER=a.order_id ";
+		$sql .="where ";
+		$sql .="(b.item_id='" . $item . "' and b.gudang='". $gudang ."' and kirim=0 and c.ORDNUMBER is null and pengajuan_diskon=0 and (datediff(hour,a.tanggal,getdate()) <24)) ";
+		$sql .="OR (b.item_id='" . $item . "' and b.gudang='". $gudang ."' and kirim = 0 and pengajuan_diskon=1 and (datediff(hour,a.tanggal,getdate()) <24) and c.ORDNUMBER is null ) order by a.tanggal desc";	
+
+		return sql::execute( $sql );
+	}
 	static function tambah_akumulasi_log( $order_id = "", $dealer_id = "" ){		
 				
 		if($_SESSION["pilih_cn"]==0 ) {

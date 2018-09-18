@@ -149,8 +149,10 @@ $( document ).ready(function() {
    if($("#flag_terapkan").val()==2) ShowModal();
 
    $("#ganti-gudang").click(function(){   	
-
-		$.get( "pilih-gudang.php", { order_id: "DRAFT-chandra-DA16711059B0", qty: 3, item: "BH0725L0413S13" } )
+   		var order_id = $("#ganti-gudang").attr("data-order");
+   		var qty = $("#ganti-gudang").attr("data-qty");
+   		var item = $("#ganti-gudang").attr("data-item");
+		$.get( "pilih-gudang.php", { order_id: order_id, qty: qty, item: item } )
 		  .done(function( data ) {
 		  		//alert(data);
 		    	$(".modal-content").html(data);
