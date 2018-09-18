@@ -9,6 +9,7 @@ if( $_REQUEST["draft"] == 1 ){
 	$rs_item = order::daftar_item(0);
 	if( sqlsrv_num_rows( $rs_item ) > 0 ){
 		while( $item = sqlsrv_fetch_array($rs_item) ){
+			$arr_draft["item-desc"] = $item["desc"];
 			if ($_REQUEST["gudang"]=="GDGPST"){
 				$arr_draft["stock_acc"] =(int) $item["qty_accpac_pusat"];
 				$arr_draft["stock_commit"] =(int) $item["kuantitas_pusat_terambil"] ;
@@ -27,8 +28,15 @@ if( $_REQUEST["draft"] == 1 ){
 		
 		while( $data_area = sqlsrv_fetch_array($rs_draft) ){
 
-			$data_dealer .= "<tr><td>" . $data_area["order_id"] . "</td><td>" . $data_area["user_id"] . "</td><td>" . date_format($data_area['tanggal'], 'd-F-Y' ) . "</td><td>" . $data_area["kirim"] . "</td><td>" . $data_area["pengajuan_diskon"] . "</td><td>" . $data_area["kuantitas"] . "</td></tr>";
+			$data_dealer .= "<tr><td>" . $data_area["order_id"] . "</td><td>" . $data_area["user_id"] . "</td><td>" . date_format($data_area['tanggal'], 'd-F-Y' ) . "</td><td>" . $data_area["kuantitas"] . "</td></tr>";
+
+			if($data_area["pengajuan_diskon"]==1){
+				$data_dealer .= "<td>Pengajuan</td>";
+			}else{
+				$data_dealer .= "<td>Drafting</td>";
+			}
 			
+			$data_dealer .= "</tr>";
 
 		}
 	}

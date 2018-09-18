@@ -4,7 +4,13 @@ include "includes/top.php";
 
 <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
 <script type="text/javascript" src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-
+<style type="text/css">
+	@media only screen and (max-width: 600px) {
+		.modal-content {
+		    width: 82% !important;
+		}
+	}
+</style>
 
 <div>
 	<div style="float:left; display:block; width:100%; border:none">
@@ -22,6 +28,7 @@ include "includes/top.php";
 	    <div class="modal-header" style="background-color: gainsboro;padding: 20px;">
 	      <span class="close">&times;</span>
 	      <h2>Data Draft Stok By <span id="gudangid"></span></h2>
+	      <h2>Item : <span id="item-desc"></span></h2>
 	    </div>
 	    <div class="modal-body">
 	    	<div>
@@ -36,9 +43,8 @@ include "includes/top.php";
 	                <th>Order ID</th>
 	                <th>User ID</th>
 	                <th>Tanggal</th>
-	               	<th>Kirim</th>
-	               	<th>Pengajuan Disc</th>
 	               	<th>Qty</th>
+	               	<th>Status</th>
 	            </tr>
 	        </thead>
 	        <tbody>
