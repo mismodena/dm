@@ -14,6 +14,8 @@ function showmodal(item,gudang) {
 			$("#s_acc").text(numberWithCommas(data["stock_acc"]));
 			$("#s_commit").text(numberWithCommas(data["stock_commit"]));
 			$("#s_free").text(numberWithCommas(data["stock_free"]));
+			$("#item-desc").text(data["item-desc"]);
+
 	    	$("#myTable>tbody").html(data["item"]);
 	    	$(".modal-content").css("overflow-y","scroll");
 	    	$(".modal-content").css("max-height","600px");
