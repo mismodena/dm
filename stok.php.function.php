@@ -29,7 +29,7 @@ if( $_REQUEST["draft"] == 1 ){
 		
 		while( $data_area = sqlsrv_fetch_array($rs_draft) ){
 
-			$data_dealer .= "<tr><td>" . $data_area["order_id"] . "</td><td>" . $data_area["user_id"] . "</td><td>" . date_format($data_area['tanggal'], 'd-F-Y' ) . "</td><td>" . $data_area["kuantitas"] . "</td></tr>";
+			$data_dealer .= "<tr><td>" . $data_area["order_id"] . "</td><td>" . $data_area["user_id"] . "</td><td>" . date_format($data_area['tanggal'], 'd-F-Y' ) . "</td><td>" . $data_area["kuantitas"] . "</td>";
 
 			if($data_area["pengajuan_diskon"]==1){
 				$data_dealer .= "<td>Pengajuan</td>";
