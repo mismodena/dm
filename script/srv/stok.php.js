@@ -5,3 +5,34 @@ function cari_item(){
 	if( i == '' ) {alert('Mohon isikan item yang akan dicari!');return false;}
 	location.href='stok.php?item=' + i;
 }
+
+function showmodal(item,gudang) {
+	$("#gudangid").text(gudang);
+	$.get( "stok.php", { draft: 1, items: item, gudang: gudang} )
+		.done(function( data ) {	
+			data = JSON.parse(data);
+			$("#s_acc").text(numberWithCommas(data["stock_acc"]));
+			$("#s_commit").text(numberWithCommas(data["stock_commit"]));
+			$("#s_free").text(numberWithCommas(data["stock_free"]));
+	    	$("#myTable>tbody").html(data["item"]);
+	    	$(".modal-content").css("overflow-y","scroll");
+	    	$(".modal-content").css("max-height","600px");
+	    	$("#modal-stok").css("display","block");
+	});
+ 	    	    
+}
+
+$( document ).ready(function() {
+	$('#myTable').DataTable({
+    	"bLengthChange": false,
+    	"bInfo" : false
+    });	
+	$(".close").click(function(){ 		
+		$("#modal-stok").css("display","none");
+	})
+})
+
+function numberWithCommas(n) {
+    var parts=n.toString().split(".");
+    return parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (parts[1] ? "." + parts[1] : "");
+}
