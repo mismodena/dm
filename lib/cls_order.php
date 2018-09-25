@@ -2,6 +2,10 @@
 
 class order extends sql_dm{
 
+	private static function durasi_pengajuan_persetujujuan ( $kolom_pembanding ){
+		return "datediff(day, ". $kolom_pembanding .", GETDATE()) <= 0";
+	}
+	
 	static function sql_item_info_khusus_untuk_cek_stok( $diskon = 0){
 		if( defined("__MODE_SIMULASI__") ) 
 			return "select ltrim(rtrim(b.itemno)) itemno, 
@@ -48,7 +52,7 @@ class order extends sql_dm{
 						select order_id, item_id, kuantitas, gudang from order_item  union all
 						( select order_id, item_id, kuantitas, gudang from order_diskon_freeitem x, diskon y where x.diskon_id = y.diskon_id  )  
 					) a, [order] b where a.order_id = b.order_id and a.gudang = 'GDGPST' and b.pengajuan_diskon = 1 and b.kirim <> 1 and 
-						/* rilis stok stlh ganti hari datediff(day, b.tanggal, GETDATE()) <=1*/ /* diganti menjadi 24 jam*/ datediff(hour, b.tanggal, GETDATE()) <=24 ". 
+						/* rilis stok stlh ganti hari datediff(day, b.tanggal, GETDATE()) <=1*/ /* diganti menjadi 24 jam datediff(hour, b.tanggal, GETDATE()) <=24 */ ". self::durasi_pengajuan_persetujujuan( "b.tanggal" ) . 
 					( @$_SESSION["order_id"] != "" ? " and a.order_id <>  '". main::formatting_query_string( $_SESSION["order_id"] ) ."'" : "" ) ." 
 					group by item_id, a.gudang
 				) f on b.itemno = f.item_id
@@ -57,7 +61,7 @@ class order extends sql_dm{
 						select order_id, item_id, kuantitas, gudang from order_item  union all
 						( select order_id, item_id, kuantitas, gudang from order_diskon_freeitem x, diskon y where x.diskon_id = y.diskon_id  )  
 					) x, [order] y where x.order_id = y.order_id and x.gudang = k.gudang and y.pengajuan_diskon = 1 and y.kirim <> 1 and 
-						/* rilis stok stlh ganti hari datediff(day, b.tanggal, GETDATE()) <=1*/ /* diganti menjadi 24 jam*/ datediff(hour, y.tanggal, GETDATE()) <=24  ". 
+						/* rilis stok stlh ganti hari datediff(day, b.tanggal, GETDATE()) <=1*/ /* diganti menjadi 24 jam datediff(hour, y.tanggal, GETDATE()) <=24 */ ".  self::durasi_pengajuan_persetujujuan( "y.tanggal" ) . 
 					( @$_SESSION["order_id"] != "" ? " and x.order_id <>  '". main::formatting_query_string( $_SESSION["order_id"] ) ."'" : "" ) ." 
 					and x.item_id = b.itemno
 					group by /*x.order_id,*/ x.item_id, x.gudang
@@ -370,8 +374,8 @@ class order extends sql_dm{
 		$sql .="from dm..[order] a inner join dm..order_item b ON a.order_id=b.order_id ";
 		$sql .="left join SGTDAT..oeordh c on c.ORDNUMBER=a.order_id ";
 		$sql .="where ";
-		$sql .="(b.item_id='" . $item . "' and b.gudang='". $gudang ."' and kirim=0 and c.ORDNUMBER is null and pengajuan_diskon=0 and (datediff(hour,a.tanggal,getdate()) <24)) ";
-		$sql .="OR (b.item_id='" . $item . "' and b.gudang='". $gudang ."' and kirim = 0 and pengajuan_diskon=1 and (datediff(hour,a.tanggal,getdate()) <24) and c.ORDNUMBER is null ) order by a.tanggal desc";	
+		$sql .="(b.item_id='" . $item . "' and b.gudang='". $gudang ."' and kirim=0 and c.ORDNUMBER is null and pengajuan_diskon=0 and ( " . self::durasi_pengajuan_persetujujuan( "a.tanggal" ) . " ) ) ";
+		$sql .="OR (b.item_id='" . $item . "' and b.gudang='". $gudang ."' and kirim = 0 and pengajuan_diskon=1 and ( " . self::durasi_pengajuan_persetujujuan( "a.tanggal" ) . " ) and c.ORDNUMBER is null ) order by a.tanggal desc";	
 
 		return sql::execute( $sql );
 	}
