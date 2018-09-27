@@ -374,8 +374,8 @@ class order extends sql_dm{
 		$sql .="from dm..[order] a inner join dm..order_item b ON a.order_id=b.order_id ";
 		$sql .="left join SGTDAT..oeordh c on c.ORDNUMBER=a.order_id ";
 		$sql .="where ";
-		$sql .="(b.item_id='" . $item . "' and b.gudang='". $gudang ."' and kirim=0 and c.ORDNUMBER is null and pengajuan_diskon=0 and ( " . self::durasi_pengajuan_persetujujuan( "a.tanggal" ) . " ) ) ";
-		$sql .="OR (b.item_id='" . $item . "' and b.gudang='". $gudang ."' and kirim = 0 and pengajuan_diskon=1 and ( " . self::durasi_pengajuan_persetujujuan( "a.tanggal" ) . " ) and c.ORDNUMBER is null ) order by a.tanggal desc";	
+		$sql .="(b.item_id='" . $item . "' and b.gudang='". $gudang ."' and kirim=0 /*and c.ORDNUMBER is null*/ and pengajuan_diskon=0 and ( " . self::durasi_pengajuan_persetujujuan( "a.tanggal" ) . " ) ) ";
+		$sql .="OR (b.item_id='" . $item . "' and b.gudang='". $gudang ."' and kirim = 0 and pengajuan_diskon=1 and ( " . self::durasi_pengajuan_persetujujuan( "a.tanggal" ) . " ) /*and c.ORDNUMBER is null*/ ) order by a.tanggal desc";	
 
 		return sql::execute( $sql );
 	}
