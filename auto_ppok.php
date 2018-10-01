@@ -1,5 +1,5 @@
 <?
-	//overlimit -> PPOK Auto
+	//overlimit -> PPOK Auto --
 	//e.cabang, e.user_id, e.kode_sales, e.email, e.nama_lengkap, c.order_id, c.keterangan_order
 	//$notPPOK = array('A1','A2','A3','A4','A6','A7','V','Y01','Y02','Y11','Y12','Z','Z1');
 	$notPPOK = array('A1','A3','A4','A7','V','Y01','Y02','Y11','Y12','Z','Z1');
