@@ -78,6 +78,9 @@ if( $_REQUEST["c"] == "kirim_order" || $_REQUEST["c"] == "kirim_order_dariperset
 		die( "<script>". @$tambahan_script ."alert('Persetujuan berhasil direkam di database!\\nData order sudah sudah di-entri ke dalam ACCPAC.'); window.close();</script>" );
 	}
 	
+	// auto ppok jika overlimit
+	include "auto_ppok.php";
+	
 	echo "<script>location.href='transaksi-4.php?c=kirim_order_daripersetujuan&order_id=". $data_dealer["order_id"] ."&split=". ( $order_split ? sha1($data_dealer["order_id"]) : "" ) ."'</script>";
 	echo "Nomor Order : " . $data_dealer["order_id"];
 	exit;
