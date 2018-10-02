@@ -71,7 +71,7 @@ if( $_REQUEST["c"] == "kirim_order" || $_REQUEST["c"] == "kirim_order_dariperset
 		
 	}
 	
-	// auto ppok jika overlimit
+	// auto ppok jika overlimit --
 	include "auto_ppok.php";
 
 	if( $_REQUEST["c"] == "kirim_order_daripersetujuan" ){
