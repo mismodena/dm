@@ -1,7 +1,7 @@
 <?
 $arr_dealer_modern = "'Y','Y01','Y02','Y1','Y11','Y12'";
 $arr_dealer_pameran = "'WG', 'PR', 'KK'";
-$arr_dealer_project = "'R','B','U'";
+$arr_dealer_project = "'R','B','U','G'";
 $arr_dealer_project_ecommerce = "'SH'";
 $arr_dealer_professional = "'PROFESSIONAL'";
 
@@ -71,7 +71,7 @@ if( $page != "transaksi.php" ){
 		".$GLOBALS["database_accpac"]."..ARCUS a left join ".$GLOBALS["database_accpac"]."..ARSAP b on b.CODESLSP = a.CODESLSP1 		
 		". $select_dealer ."
 		
-		where a.SWACTV = 1 ";
+		where a.SWACTV = 1 /*parameter_sql_pertama*/ ";
 		
 		$sql = $sql_template;
 		if( @$_REQUEST["order_id"] != ""  ) goto Skip_parameter;
@@ -136,8 +136,8 @@ $sql .= " and a.idcust not in ('MC03W12020B1')";
 
 Skip_parameter:
 
-//echo "<!--";
-//echo $sql;
-//print_r($_SESSION);
-//echo " -->";
+echo "<!--";
+echo $sql;
+print_r($_SESSION);
+echo " -->";
 ?>
