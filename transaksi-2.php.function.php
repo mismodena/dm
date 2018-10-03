@@ -20,7 +20,7 @@ $_POST["pengajuan_diskon"] = 0;
 
 include "dealer.php";
 
-$rs_dealer = sql::execute( $sql . " and e.user_id = '". main::formatting_query_string($_SESSION["sales_id"]) ."' " );
+$rs_dealer = sql::execute( str_replace("/*parameter_sql_pertama*/", " and e.user_id = '". main::formatting_query_string($_SESSION["sales_id"]) ."' ", $sql) . " and e.user_id = '". main::formatting_query_string($_SESSION["sales_id"]) ."' " );
 
 if( sqlsrv_num_rows( $rs_dealer ) <= 0 ){
 	order::orderid( $_SESSION["kode_dealer"], 0, true );
