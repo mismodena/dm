@@ -51,6 +51,9 @@ else{
 	}
 }
 
+// auto ppok jika overlimit --
+include "auto_ppok.php";
+
 echo "<h1>Selesai!!!</h1>";
 
 if( isset( $_REQUEST["auto_close"] ) ) echo "<script>window.close()</script>";  
