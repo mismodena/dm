@@ -16,14 +16,16 @@
 			
 			$nama = str_replace(' ','_',trim($data_dealer["nama_lengkap"]));
 			$ket = str_replace(' ','_',trim($data_dealer["keterangan_order"]));
+			$email = str_replace(' ','',trim($data_dealer["email"]));
+			$emailbm = str_replace(' ','',trim($data_dealer["email_bm"]));
 			
 			$urlp = "http://indomoportal.modena.co.id:2010/app/lkonline/ppok_exec_auto.asp?cmd=exe&j=".$jenis."&dealer=".$data_dealer["idcust"];
 			$urlp .= "&sOrder=".$nominal_order["nominal_order_net"]."&kodeS=".$data_dealer["kode_sales"]."&id=".$data_dealer["order_id"];
 			$urlp .= "&nama=".$nama."&ket=".$ket;
-			$urlp .= "&email=".$data_dealer["email"]."&emailbm=".$data_dealer["email_bm"];
+			$urlp .= "&email=".$email."&emailbm=".$emailbm;
 			$urlp .= "&persen=".$persen;
 			sql::execute( "insert into auto_ppok values ('".$data_dealer["order_id"]."','".$urlp."')" );
-			file_get_contents($urlp);
+			//file_get_contents($urlp);
 			//echo $urlp;
 			
 		}
