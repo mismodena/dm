@@ -23,6 +23,7 @@
 			$urlp .= "&sOrder=".$nominal_order["nominal_order_net"]."&kodeS=".$data_dealer["kode_sales"]."&id=".$data_dealer["order_id"];
 			$urlp .= "&nama=".$nama."&ket=".$ket;
 			$urlp .= "&email=".$email."&emailbm=".$emailbm;
+			$urlp .= "&limit=".$overlimit["limit_kredit"];
 			$urlp .= "&persen=".$persen;
 			sql::execute( "insert into auto_ppok values ('".$data_dealer["order_id"]."','".$urlp."')" );
 			//file_get_contents($urlp);
