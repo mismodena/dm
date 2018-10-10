@@ -21,8 +21,8 @@
 			
 			$urlp = "http://indomoportal.modena.co.id:2010/app/lkonline/ppok_exec_auto.asp?cmd=exe&j=".$jenis."&dealer=".$data_dealer["idcust"];
 			$urlp .= "&sOrder=".$nominal_order["nominal_order_net"]."&kodeS=".$data_dealer["kode_sales"]."&id=".$data_dealer["order_id"];
-			$urlp .= "&nama=".$nama."&ket=".$ket;
-			$urlp .= "&email=".$email."&emailbm=".$emailbm;
+			$urlp .= "&nama=".$data_dealer["nama_lengkap"]."&ket=".$data_dealer["keterangan_order"];
+			$urlp .= "&email=".$data_dealer["email"]."&emailbm=".$data_dealer["email_bm"];
 			$urlp .= "&limit=".$overlimit["limit_kredit"];
 			$urlp .= "&persen=".$persen;
 			sql::execute( "insert into auto_ppok values ('".$data_dealer["order_id"]."','".$urlp."')" );
