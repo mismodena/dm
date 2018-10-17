@@ -66,7 +66,7 @@ if( $page != "transaksi.php" ){
 }
 
 	$sql_template="select ltrim(rtrim(idcust)) idcust, ltrim(rtrim(namecust)) namecust, '['+ltrim(rtrim(textsnam))+'] '+ltrim(rtrim(textstre1))+' '+ltrim(rtrim(textstre2))+' '+ltrim(rtrim(textstre3)) addr, namecity, custtype, priclist, idgrp, upper(a.email1) email1,
-		 ".$GLOBALS["database_accpac"].".dbo.ufnDiskonDealer(a.IDCUST) disc ". $kolom_dealer ."
+		 ".$GLOBALS["database_accpac"].".dbo.ufnDiskonDealer(a.IDCUST) disc, a.codeterm, a.codeterr ". $kolom_dealer ."
 		from 
 		".$GLOBALS["database_accpac"]."..ARCUS a left join ".$GLOBALS["database_accpac"]."..ARSAP b on b.CODESLSP = a.CODESLSP1 		
 		". $select_dealer ."
