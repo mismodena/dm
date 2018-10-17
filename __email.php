@@ -14,7 +14,7 @@ order_id : sudah jelas
 [kirim_accpac] : opsional, text bebas.. asal tidak kosong saja... 
 */
 
-$sql = "select a.order_id, a.dealer_id idcust, b.kode_sales, b.email, b.nama_lengkap, a.keterangan_order, c.email email_bm, ar.idgrp 
+$sql = "select a.order_id, a.dealer_id idcust, b.kode_sales, b.email, b.nama_lengkap, a.keterangan_order, c.email email_bm, ar.idgrp, ar.codeterr 
 		from [order] a, [user] b, [user] c, sgtdat.dbo.ARCUS ar
 		where a.user_id = b.user_id AND b.bm = c.kode_sales AND a.dealer_id = ar.IDCUST and a.order_id = '". main::formatting_query_string($_REQUEST["order_id"]) ."';";
 //echo $sql;
