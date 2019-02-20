@@ -12,11 +12,11 @@ function filter_diskon( $data_dealer, $diskon_id ){
 
 	// dealer modern
 	if( in_array( trim( $data_dealer["idgrp"] ), explode(",", str_replace("'", "", $GLOBALS["arr_dealer_modern"] ) ) ) ) {
-		$arr_diskon_id = array(1,2,4,7,8,9,10,12,13,14,16,20,22,23,24,26,27,28,29,/*32*/43,41,42,44);
+		$arr_diskon_id = array(1,2,4,7,8,9,10,12,13,14,16,20,22,23,24,26,27,28,29,/*32*/43,41,42,44,49,50,51);
 
 		// dealer modern non-TT
 		if( in_array( trim( $data_dealer["idgrp"] ), array('Y1','Y11','Y12') ) ) 
-			$arr_diskon_id = array(1,2,4,7,8,9,10,12,13,14,16,20,21,22,23,24,26,27,28,/*32*/43,41,42,44);
+			$arr_diskon_id = array(1,2,4,7,8,9,10,12,13,14,16,20,21,22,23,24,26,27,28,/*32*/43,41,42,44,49,50,51);
 		
 		if( $ada_front_margin ) $arr_diskon_id[]  = 27;
 	
@@ -49,7 +49,7 @@ function filter_diskon( $data_dealer, $diskon_id ){
 		
 	// tradisional
 	else
-		$arr_diskon_id = array(1,2,4,7,33,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,32,35,42,44);
+		$arr_diskon_id = array(1,2,4,7,33,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,32,35,42,44,49,50,51);
 	
 	if( count( $arr_diskon_id ) > 0 && !in_array( $diskon_id, $arr_diskon_id ) ) $return = false;
 
