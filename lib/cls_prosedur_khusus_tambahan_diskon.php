@@ -45,7 +45,7 @@ class prosedur_khusus_tambahan_diskon extends tambahan_diskon{
 		//						". $persentase_saldo_bisa_digunakan . " * ( a.tqAvail - isnull(c.pemakaian_tq, 0) ) tqAvail ";
 		
 		$kolom = " a.idCust, a.bqAvail - isnull(d.pemakaian_bq_freeitem, 0) - isnull(b.pemakaian_bq_diskon, 0)   bqAvail, 
-								( a.tqAvail - isnull(c.pemakaian_tq, 0) ) tqAvail ";
+								( a.tqAvail - isnull(c.pemakaian_tq, 0) ) tqAvail, ( a.ttAvail - isnull(e.pemakaian_tt, 0) ) ttAvail ";
 		
 		if( $net_kecuali_order_id ) 
 			$sql_parameter = "and a.order_id <> ". $net_kecuali_order_id ;
@@ -74,17 +74,83 @@ class prosedur_khusus_tambahan_diskon extends tambahan_diskon{
 							c.user_id = d.user_id and d.bm = e.kode_sales and e.user_id = '". main::formatting_query_string( $_SESSION["sales_id"] ) ."' and
 							a.diskon_id in (13)  $sql_parameter
 							) d on 1=1
+				left outer join (
+							select sum(diskon_bqtq) / ". $prosedur_bqtq->persentase_budget_bisa_digunakan_tq ."pemakaian_tt, 'tt' jenis_budget from order_diskon_bqtq a, order_diskon b, [order] c 
+								where 
+							a.order_id = b.order_id and a.user_id = b.user_id and a.diskon_id = b.diskon_id and 
+							b.order_id = c.order_id and b.user_id = c.user_id and c.kirim <> 1 and c.dealer_id = ". $dealer_id ." and
+							a.diskon_id in (51) $sql_parameter
+							) e on 1=1
 				";
 
 		try{		return sqlsrv_fetch_array( sql::execute( $sql  ) );	}
 		catch(Exception $e){$e->getMessage();}		
 	}
 	
+	static function saldo_bqtq_pusat( $dealer_id, $net_kecuali_order_id = "", $persentase_saldo_bisa_digunakan = 1 ){
+		
+		$prosedur_bqtq = new prosedur_khusus_tambahan_diskon("");
+		
+		$kolom = "*";
+		//$kolom = " a.idCust, ( ". $persentase_saldo_bisa_digunakan ." * ( a.bqAvail - isnull(d.pemakaian_bq_freeitem, 0) ) ) - isnull(b.pemakaian_bq_diskon, 0) bqAvail, 
+		//						". $persentase_saldo_bisa_digunakan . " * ( a.tqAvail - isnull(c.pemakaian_tq, 0) ) tqAvail ";
+		
+		$kolom = " a.idCust, a.tqAvail - isnull(b.pemakaian_tq_freeitem, 0) - isnull(c.pemakaian_tq_diskon, 0) tqAvail,
+								 a.bbtAvail - isnull(d.pemakaian_bbt, 0) bbtAvail,
+								 a.ttAvail - isnull(e.pemakaian_tt, 0) ttAvail";
+		
+		if( $net_kecuali_order_id ) 
+			$sql_parameter = "and a.order_id <> ". $net_kecuali_order_id ;
+		
+		$sql = "select ". $kolom ." from ". __SERVER_DISKON_KHUSUS__ .".dbo.getBQTQBalance('A1', ". $dealer_id . ") a ";				
+		$sql .= "left outer join (
+							select sum(diskon_bqtq) / ". $prosedur_bqtq->persentase_budget_bisa_digunakan_tq ." pemakaian_tq_freeitem, 'tq' jenis_budget from order_diskon_bqtq a, order_diskon b, [order] c
+								where 
+							a.order_id = b.order_id and a.user_id = b.user_id and a.diskon_id = b.diskon_id and 
+							b.order_id = c.order_id and b.user_id = c.user_id and c.kirim <> 1 and 
+							a.diskon_id in (32,43)  $sql_parameter
+							) b on 1=1
+				left outer join (
+							select sum(diskon_bqtq) / ". $prosedur_bqtq->persentase_budget_bisa_digunakan_tq ." pemakaian_tq_diskon, 'tq' jenis_budget from order_diskon_bqtq a, order_diskon b, [order] c 
+								where 
+							a.order_id = b.order_id and a.user_id = b.user_id and a.diskon_id = b.diskon_id and 
+							b.order_id = c.order_id and b.user_id = c.user_id and c.kirim <> 1 and 
+							a.diskon_id in (2) $sql_parameter
+							) c on 1=1
+				left outer join (
+							select sum(diskon_bqtq) / ". $prosedur_bqtq->persentase_budget_bisa_digunakan_tq ." pemakaian_bbt, 'bbt' jenis_budget from order_diskon_bqtq a, order_diskon b, [order] c
+								where 
+							a.order_id = b.order_id and a.user_id = b.user_id and a.diskon_id = b.diskon_id and 
+							b.order_id = c.order_id and b.user_id = c.user_id and c.kirim <> 1 and  
+							a.diskon_id in (49)  $sql_parameter
+							) d on 1=1
+				left outer join (
+							select sum(diskon_bqtq) / ". $prosedur_bqtq->persentase_budget_bisa_digunakan_tq ." pemakaian_tt, 'tt' jenis_budget from order_diskon_bqtq a, order_diskon b, [order] c
+								where 
+							a.order_id = b.order_id and a.user_id = b.user_id and a.diskon_id = b.diskon_id and 
+							b.order_id = c.order_id and b.user_id = c.user_id and c.kirim <> 1 and 
+							a.diskon_id in (50)  $sql_parameter
+							) e on 1=1
+				";
+		try{		return sqlsrv_fetch_array( sql::execute( $sql  ) );	}
+		catch(Exception $e){$e->getMessage();}		
+	}
+	
 	static function saldo( $dealer_id ){
 		if( @$_SESSION["sales_id"] != "" )
-			$sql = "select a.idCust, a.bqAvail, a.tqAvail from ". __SERVER_DISKON_KHUSUS__ .".dbo.getBQTQBalance((select grup_cabang from [user] where user_id = '". main::formatting_query_string( $_SESSION["sales_id"] ) ."'), ". $dealer_id . ") a ";			
+			$sql = "select a.idCust, a.bqAvail, a.tqAvail, a.ttAvail from ". __SERVER_DISKON_KHUSUS__ .".dbo.getBQTQBalance((select grup_cabang from [user] where user_id = '". main::formatting_query_string( $_SESSION["sales_id"] ) ."'), ". $dealer_id . ") a ";			
 		else
 			$sql = "select $dealer_id, '===' bqAvail, '===' tqAvail";
+		
+		try{		return sqlsrv_fetch_array( sql::execute( $sql  ) );	}
+		catch(Exception $e){$e->getMessage();}				
+	}
+	
+	static function saldo_pusat( $dealer_id ){
+		if( @$_SESSION["sales_id"] != "" )
+			$sql = "select a.idCust, a.bqAvail, a.tqAvail, a.bbtAvail, a.ttAvail from ". __SERVER_DISKON_KHUSUS__ .".dbo.getBQTQBalance('A1', ". $dealer_id . ") a ";			
+		else
+			$sql = "select $dealer_id, '===' bqAvail, '===' tqAvail, '===' bbtAvail, '===' ttAvail";
 		try{		return sqlsrv_fetch_array( sql::execute( $sql  ) );	}
 		catch(Exception $e){$e->getMessage();}				
 	}
@@ -92,6 +158,12 @@ class prosedur_khusus_tambahan_diskon extends tambahan_diskon{
 	static function pemakaian_saldo( $order_id, $mode = "bq", $is_order_ini = true ){
 		
 		$prosedur_bqtq = new prosedur_khusus_tambahan_diskon("");
+		$arr_mode_diskonid["bq_diskon"] = 1;
+		$arr_mode_diskonid["bq_freeitem"] = 13;
+		$arr_mode_diskonid["tq"] = 14;
+		$arr_mode_diskonid["tt"] = 51;
+		
+		$arr_mode_bqtq_diskon = array("bq_diskon");
 		
 		$operator = " = ";
 		if( !$is_order_ini ) $operator = "<>";
@@ -101,22 +173,83 @@ class prosedur_khusus_tambahan_diskon extends tambahan_diskon{
 								where 
 							a.order_id = b.order_id and a.user_id = b.user_id and a.diskon_id = b.diskon_id and 
 							b.order_id = c.order_id and b.user_id = c.user_id /*and c.kirim <> 1*/ and c.user_id = d.user_id and
-							a.diskon_id in (1) and a.order_id ". $operator ." ". $order_id . ( $operator == "<>" ? " and c.kirim <> 1 and d.grup_cabang in (select y.grup_cabang from [order] x, [user] y where x.user_id = y.user_id and x.order_id = ". $order_id ." )" : "" );
+							a.diskon_id in (". $arr_mode_diskonid[$mode] .") and a.order_id ". $operator ." ". $order_id . ( $operator == "<>" ? " and c.kirim <> 1 and d.grup_cabang in (select y.grup_cabang from [order] x, [user] y where x.user_id = y.user_id and x.order_id = ". $order_id ." )" : "" );
 		
 		elseif( $mode == "bq_freeitem" )
 			$sql = "select sum(diskon_bqtq) / ". $prosedur_bqtq->persentase_budget_bisa_digunakan_bq_freeitem ." pemakaian, 'bq' jenis_budget from order_diskon_bqtq a, order_diskon b, [order] c, [user] d  
 								where 
 							a.order_id = b.order_id and a.user_id = b.user_id and a.diskon_id = b.diskon_id and 
 							b.order_id = c.order_id and b.user_id = c.user_id /*and c.kirim <> 1*/ and c.user_id = d.user_id and
-							a.diskon_id in (13) and a.order_id ". $operator ." ". $order_id . ( $operator == "<>" ? " and c.kirim <> 1 and d.grup_cabang in (select y.grup_cabang from [order] x, [user] y where x.user_id = y.user_id and x.order_id = ". $order_id ." )" : "" );
+							a.diskon_id in (". $arr_mode_diskonid[$mode] .") and a.order_id ". $operator ." ". $order_id . ( $operator == "<>" ? " and c.kirim <> 1 and d.grup_cabang in (select y.grup_cabang from [order] x, [user] y where x.user_id = y.user_id and x.order_id = ". $order_id ." )" : "" );
 		
 		elseif( $mode == "tq" )
-			$sql = "select sum(diskon_bqtq) / ". $prosedur_bqtq->persentase_budget_bisa_digunakan_tq ." pemakaian, 'bq' jenis_budget from order_diskon_bqtq a, order_diskon b, [order] c 
+			$sql = "select sum(diskon_bqtq) / ". $prosedur_bqtq->persentase_budget_bisa_digunakan_tq ." pemakaian, 'tq' jenis_budget from order_diskon_bqtq a, order_diskon b, [order] c 
 								where 
 							a.order_id = b.order_id and a.user_id = b.user_id and a.diskon_id = b.diskon_id and 
 							b.order_id = c.order_id and b.user_id = c.user_id /*and c.kirim <> 1*/ and
-							a.diskon_id in (14) and a.order_id ". $operator ." ". $order_id . ( $operator == "<>" ? " and c.kirim <> 1 and c.dealer_id = (select dealer_id from [order] where order_id=". $order_id .")" : "" );
-
+							a.diskon_id in (". $arr_mode_diskonid[$mode] .") and a.order_id ". $operator ." ". $order_id . ( $operator == "<>" ? " and c.kirim <> 1 and c.dealer_id = (select dealer_id from [order] where order_id=". $order_id .")" : "" );
+		elseif( $mode == "tt" )
+			$sql = "select sum(diskon_bqtq) / ". $prosedur_bqtq->persentase_budget_bisa_digunakan_tq ." pemakaian, 'tt' jenis_budget from order_diskon_bqtq a, order_diskon b, [order] c 
+								where 
+							a.order_id = b.order_id and a.user_id = b.user_id and a.diskon_id = b.diskon_id and 
+							b.order_id = c.order_id and b.user_id = c.user_id /*and c.kirim <> 1*/ and
+							a.diskon_id in (". $arr_mode_diskonid[$mode] .") and a.order_id ". $operator ." ". $order_id . ( $operator == "<>" ? " and c.kirim <> 1 and c.dealer_id = (select dealer_id from [order] where order_id=". $order_id .")" : "" );
+		
+		
+		$data_pemakaian = sqlsrv_fetch_array( sql::execute( $sql  ) );
+		// cek untuk data diskon faktur
+		if( $data_pemakaian["pemakaian"] == "" && in_array($mode, $arr_mode_bqtq_diskon) ){
+			$sql = "
+					select 
+						case 
+							when nilai_diskon <= 100 
+								then (select SUM( sub_total ) from dbo.ufn_daftar_order_item(b.order_id)) * nilai_diskon / 100 
+								else nilai_diskon  
+						end pemakaian, 'bq' jenis_budget
+						from order_diskon b, [order] c, [user] d  
+						where b.order_id = c.order_id and b.user_id = c.user_id /*and c.kirim <> 1*/ and c.user_id = d.user_id and 
+						b.diskon_id in (". $arr_mode_diskonid[$mode] .") and b.order_id ". $operator ." ". $order_id . ( $operator == "<>" ? " and c.kirim <> 1 and d.grup_cabang in (select y.grup_cabang from [order] x, [user] y where x.user_id = y.user_id and x.order_id = ". $order_id ." )" : "" );
+			$data_pemakaian = sqlsrv_fetch_array( sql::execute( $sql ) );
+		}
+		
+		try{		return $data_pemakaian;	}
+		catch(Exception $e){$e->getMessage();}						
+	}
+	
+	static function pemakaian_saldo_pusat( $order_id, $mode = "tq_diskon", $is_order_ini = true ){
+		
+		$prosedur_bqtq = new prosedur_khusus_tambahan_diskon("");
+		
+		$operator = " = ";
+		if( !$is_order_ini ) $operator = "<>";
+		
+		if( $mode == "tq_diskon" )
+			$sql = "select sum(diskon_bqtq) / ". $prosedur_bqtq->persentase_budget_bisa_digunakan_tq ." pemakaian, 'tq' jenis_budget from order_diskon_bqtq a, order_diskon b, [order] c
+								where 
+							a.order_id = b.order_id and a.user_id = b.user_id and a.diskon_id = b.diskon_id and 
+							b.order_id = c.order_id and b.user_id = c.user_id /*and c.kirim <> 1*/ and 
+							a.diskon_id in (2) and a.order_id ". $operator ." ". $order_id . ( $operator == "<>" ? " and c.kirim <> 1" : "" );
+		
+		elseif( $mode == "tq_freeitem" )
+			$sql = "select sum(diskon_bqtq) / ". $prosedur_bqtq->persentase_budget_bisa_digunakan_tq ." pemakaian, 'tq' jenis_budget from order_diskon_bqtq a, order_diskon b, [order] c
+								where 
+							a.order_id = b.order_id and a.user_id = b.user_id and a.diskon_id = b.diskon_id and 
+							b.order_id = c.order_id and b.user_id = c.user_id /*and c.kirim <> 1*/ and 
+							a.diskon_id in (32,43) and a.order_id ". $operator ." ". $order_id . ( $operator == "<>" ? " and c.kirim <> 1" : "" );
+		
+		elseif( $mode == "bbt" )
+			$sql = "select sum(diskon_bqtq) / ". $prosedur_bqtq->persentase_budget_bisa_digunakan_tq ." pemakaian, 'bbt' jenis_budget from order_diskon_bqtq a, order_diskon b, [order] c 
+								where 
+							a.order_id = b.order_id and a.user_id = b.user_id and a.diskon_id = b.diskon_id and 
+							b.order_id = c.order_id and b.user_id = c.user_id /*and c.kirim <> 1*/ and
+							a.diskon_id in (49) and a.order_id ". $operator ." ". $order_id . ( $operator == "<>" ? " and c.kirim <> 1" : "" );
+		elseif( $mode == "tt" )
+			$sql = "select sum(diskon_bqtq) / ". $prosedur_bqtq->persentase_budget_bisa_digunakan_tq ." pemakaian, 'tt' jenis_budget from order_diskon_bqtq a, order_diskon b, [order] c 
+								where 
+							a.order_id = b.order_id and a.user_id = b.user_id and a.diskon_id = b.diskon_id and 
+							b.order_id = c.order_id and b.user_id = c.user_id /*and c.kirim <> 1*/ and
+							a.diskon_id in (50) and a.order_id ". $operator ." ". $order_id . ( $operator == "<>" ? " and c.kirim <> 1" : "" );
+		//echo $sql."<br />";
 		try{		return sqlsrv_fetch_array( sql::execute( $sql  ) );	}
 		catch(Exception $e){$e->getMessage();}						
 	}

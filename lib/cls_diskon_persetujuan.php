@@ -381,7 +381,7 @@ class tambahan_diskon_persetujuan extends tambahan_diskon{
 			$cek_bcm = sqlsrv_fetch_array( sql::execute( $sql ) );
 			$array_grup_cabang_aktif_bqtq = array('B','C','M','E','F','J', 'A',     'D',     'Q',     'P',     'K',     'U',     'N',     'O',     'R',
 				'Y12', 'S', 'G', 'I', 'H', 'Y11', 'A5', 'A1', 'T');
-			if( !in_array( $cek_bcm["idgrp"], $array_grup_cabang_aktif_bqtq ) && in_array( $diskon["diskon_id"], array(1,13,14) ) ) goto Skip_Mekanisme_Diskon;
+			if( !in_array( $cek_bcm["idgrp"], $array_grup_cabang_aktif_bqtq ) && in_array( $diskon["diskon_id"], array(1,13,14,2,32,43,49,50,51) ) ) goto Skip_Mekanisme_Diskon;
 
 			if( file_exists( $file_mekanisme_diskon ) ){
 				include_once $file_mekanisme_diskon;
@@ -398,7 +398,7 @@ class tambahan_diskon_persetujuan extends tambahan_diskon{
 				$diskon_ada_yg_blm_dialokasikan = $obyek_diskon->ada_yg_blm_dialokasikan();
 				$tambahan_sufiks_template_item = $obyek_diskon->sufiks_identifikasi_bqtq();
 				$saldo_tersedia_awal = $obyek_diskon->saldo_tersedia_awal();
-				
+
 				if( method_exists($obyek_diskon, "script_dikembalikan") ) $script_dikembalikan = $obyek_diskon->script_dikembalikan();
 
 			}

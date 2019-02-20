@@ -56,8 +56,12 @@ if( count( $obyek_diskon->arr_diskon_id_share_budget() ) > 1 ) {
 			$template_diskon = $obyek_diskon_kombinasi->mekanisme_prosedur_diskon();
 
 			if( !$diskon_belum_dialokasikan ) $diskon_belum_dialokasikan = $obyek_diskon_kombinasi->ada_yg_blm_dialokasikan();
-
-			$saldo_budget_kombinasi = prosedur_khusus_tambahan_diskon::saldo_bqtq( "'" . main::formatting_query_string( $data_dealer["idcust"] ) . "'" )[ $obyek_diskon_kombinasi->prefiks_identifikasi_bqtq() . "Avail"]  * $obyek_diskon_kombinasi->persentase_budget_bisa_digunakan;
+			
+			if($diskon_id==32 or $diskon_id==43 or $_REQUEST["diskonid"]==49 or $_REQUEST["diskonid"]==50)
+				$saldo_budget_kombinasi = prosedur_khusus_tambahan_diskon::saldo_bqtq_pusat( "'" . main::formatting_query_string( $data_dealer["idcust"] ) . "'" )[ $obyek_diskon_kombinasi->prefiks_identifikasi_bqtq() . "Avail"]  * $obyek_diskon_kombinasi->persentase_budget_bisa_digunakan;
+			else
+				$saldo_budget_kombinasi = prosedur_khusus_tambahan_diskon::saldo_bqtq( "'" . main::formatting_query_string( $data_dealer["idcust"] ) . "'" )[ $obyek_diskon_kombinasi->prefiks_identifikasi_bqtq() . "Avail"]  * $obyek_diskon_kombinasi->persentase_budget_bisa_digunakan;
+			
 			if( $obyek_diskon_kombinasi->saldo_tersedia_akhir() <= 0 ) $display_diskon_share = "none";
 
 		}
@@ -67,7 +71,10 @@ if( count( $obyek_diskon->arr_diskon_id_share_budget() ) > 1 ) {
 }
 
 // saldo budget tersisa
-$saldo_budget = prosedur_khusus_tambahan_diskon::saldo_bqtq( "'" .  main::formatting_query_string( $data_dealer["idcust"] ) . "'", "" );
+if($_REQUEST["diskonid"]==32 or $_REQUEST["diskonid"]==43 or $_REQUEST["diskonid"]==49 or $_REQUEST["diskonid"]==50)
+	$saldo_budget = prosedur_khusus_tambahan_diskon::saldo_bqtq_pusat( "'" .  main::formatting_query_string( $data_dealer["idcust"] ) . "'", "" );
+else
+	$saldo_budget = prosedur_khusus_tambahan_diskon::saldo_bqtq( "'" .  main::formatting_query_string( $data_dealer["idcust"] ) . "'", "" );
 
 $arr_tambahan_diskon_share[] = main::formatting_query_string( $_REQUEST["diskonid"] ); 
 if( trim(@$_REQUEST["dk"]) != "" ){
@@ -76,8 +83,14 @@ if( trim(@$_REQUEST["dk"]) != "" ){
 }
 
 // saldo budget tersedia
-foreach( $arr_tambahan_diskon_share as $diskon_id ){	
-	$saldo_tersedia[ $diskon_id ] = $saldo_budget[ ( $diskon_id == 13 ? "bq" : "tq" ) . "Avail" ];
+foreach( $arr_tambahan_diskon_share as $diskon_id ){
+	$jenis_saldo = "";
+	if($diskon_id == 13) $jenis_saldo = "bq";
+	elseif($diskon_id == 14 or $diskon_id == 32 or $diskon_id == 43) $jenis_saldo = "tq";
+	elseif($diskon_id == 49) $jenis_saldo = "bbt";
+	elseif($diskon_id == 50 or $diskon_id == 51) $jenis_saldo = "tt";
+	$saldo_tersedia[ $diskon_id ] = $saldo_budget[ $jenis_saldo . "Avail" ];
+	//$saldo_tersedia[ $diskon_id ] = $saldo_budget[ ( $diskon_id == 13 ? "bq" : "tq" ) . "Avail" ];
 	$saldo_tersedia_formatted[ $diskon_id ] = main::number_format_dec( $saldo_tersedia[ $diskon_id ] );
 	if( $saldo_tersedia[ $diskon_id ] <= 0 ) $display_diskon_share = "none";
 }

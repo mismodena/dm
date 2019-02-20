@@ -56,7 +56,7 @@ $arr_parameter["a0.kuantitas"] = array("=", "a.kuantitas_bqtq");
 $pemakaian_saldo = @sqlsrv_fetch_array( prosedur_khusus_tambahan_diskon::daftar_order_diskon_bqtq( "'". main::formatting_query_string( $_REQUEST["order_id"] ) ."'", $arr_parameter, "sum(diskon_bqtq) total_nilai_diskon") );
 
 $item_order_nominal = $pemakaian_saldo["total_nilai_diskon"];
-$item_order_nominal_formatted = main::number_format_dec( $item_order_nominal ) . " (-) (Pemotongan Saldo BQ Rp" .  main::number_format_dec( $item_order_nominal / $obyek_diskon->persentase_budget_bisa_digunakan() ) . ")" ;
+$item_order_nominal_formatted = main::number_format_dec( $item_order_nominal ) . " (-) (Pemotongan Saldo ".strtoupper($obyek_diskon->prefiks_identifikasi_bqtq())." Rp" .  main::number_format_dec( $item_order_nominal / $obyek_diskon->persentase_budget_bisa_digunakan() ) . ")" ;
 
 // saldo budget tersedia
 foreach( $arr_tambahan_diskon_share as $diskon_id ){	
