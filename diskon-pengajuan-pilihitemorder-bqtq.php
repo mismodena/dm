@@ -16,17 +16,31 @@ include "includes/top.php";
 		<!--Nilai Diskon : <?= main::number_format_dec( $data_diskon["nilai_diskon"] ) .  " - SATUAN " . 
 			($data_diskon["nilai_diskon"] <= 100 ? " % (PERSEN) " : "RP" ) ?>
 		<br />-->
-		<strong>Budget saldo tersedia : Rp<?= $saldo_awal_formatted[ $_REQUEST["diskonid"] ]?></strong>
+		<?
+			if($_REQUEST["diskonid"]==2)
+				echo "";			
+			else {
+		?>
+			<strong>Budget saldo tersedia : Rp <?=$saldo_tersedia_formatted[ $_REQUEST["diskonid"] ] ?></strong>
+		<?
+			}
+		?>
 	</div>	
 </div>
 <div style="display:block; border:solid 1px #CCC; background-color:#EEE; padding:7px">
 	<strong>Detail Budgeting</strong><br />
 	<div style="border:solid 1px #CCC; background-color:#FFF; padding:7px; margin:3px 0px 7px 0px">
 	<table cellpadding="3" cellspacing="0" border="1" width="100%" style="border:solid #CCC 1px">
+		<?
+			if($_REQUEST["diskonid"]==2)
+				echo "";			
+			else {
+		?>
 		<tr>
 			<td><?=strtoupper( $data_diskon["diskon"] )?></td>
 			<td>Rp<?= $saldo_awal_formatted[ $_REQUEST["diskonid"] ]?></td>
 		</tr>
+		<?}?>
 		<tr>
 			<td>Diskon diajukan</td>
 			<td><input type="text" name="nilai_diskon" id="nilai_diskon" value="<?= main::number_format_dec( $data_diskon["nilai_diskon"] )?>" onblur="hitung_diskon(this)" /></td>
@@ -35,10 +49,16 @@ include "includes/top.php";
 			<td>Budget diskon dibutuhkan</td>
 			<td>Rp.<?=@$item_order_nominal_formatted?></td>
 		</tr>
+		<?
+			if($_REQUEST["diskonid"]==2)
+				echo "";			
+			else {
+		?>
 		<tr>
 			<td  class="kuning"><strong>Sisa Budget Saldo</strong></td>
 			<td  class="kuning"><strong>Rp<?= main::number_format_dec($saldo_tersedia[ $_REQUEST["diskonid"] ] - @$item_order_nominal )?></strong></td>
 		</tr>
+			<?}?>
 	</table>
 	<div style="display:<?= $warning ? "block" : "none"?>; color:red; font-weight:900; padding:7px; width:100%; text-align:center">Saldo budget diskon tidak mencukupi!</div>
 	 </div>

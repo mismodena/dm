@@ -14,7 +14,15 @@ include "includes/top.php";
 		Kode Dealer : <?=$data_dealer["idcust"]?><br />
 		Nama Dealer : <?=$data_dealer["namecust"]?><br />
 		Tambahan Diskon : <?=strtoupper( $data_diskon["diskon"] )?><br />
-		<strong>Budget saldo tersedia : Rp<?= $saldo_tersedia_formatted[ $_REQUEST["diskonid"] ]?></strong>
+		<?
+			if($_REQUEST["diskonid"]==32 or $_REQUEST["diskonid"]==43 or $_REQUEST["diskonid"]==49 or $_REQUEST["diskonid"]==50)
+				echo "";			
+			else {
+		?>
+			<strong>Budget saldo tersedia : Rp <?=$saldo_tersedia_formatted[ $_REQUEST["diskonid"] ] ?></strong>
+		<?
+			}
+		?>
 	</div>	
 </div>
 <div style="display:<?=@$display_konfirmasi_share != "" ? "block" : "none"?>; border:solid 1px #CCC; background-color:#EEE; padding:7px">

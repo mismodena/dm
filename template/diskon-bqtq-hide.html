@@ -1,0 +1,52 @@
+<a id="link_#diskonid#"></a>
+<div class="item-order bg-#kelas#" >	
+	<div id="div_container_#diskonid#" class="#diskon-diterapkan#">
+		<div style="float:left; margin-bottom:3px; width:100%"><strong style="text-decoration:underline">#diskon-label#</strong></div>	
+		<input type="text" name="t_disc_#diskonid#" id="t_disc_#diskonid#" value="#diskon#" class="readonly-input" style="display:#display-nilai-diskon#" #readonly-disc# readonly="true"
+			onfocus="fokusinput(this)" onblur="unfokusinput(this)"  />
+		
+		<div style="float:left; margin-bottom:3px; width:100%">
+			<strong>Detail budget</strong>
+			<table cellpadding="3" cellspacing="0" border="1" width="100%">
+				<tr><td>Budget terpakai (Rp)</td><td>
+						#budget_terpakai_non_share#
+						<div style="padding:0px; padding-top:5px; display:#display-share-budget#"> [Share Budget : #budget_terpakai_share#<strong style="text-decoration:none">. Kombinasi dengan #share-budget#</strong>]</div>
+					</td></tr>
+				<tr><td>Budget terpakai order lain (Rp)</td><td>#budget_terpakai_order_lain#</td></tr>
+			</table>	
+			#keterangan_bqtq#
+		</div>
+		
+		<input type="button" name="b_item_#diskonid#" id="b_item_#diskonid#" value="Konfigurasi Diskon BQ/TQ" class="#opsi_tampilan-pilih-item# kuning" onclick="pilih_item_bqtq(#diskonid#)" style="float:right; margin:5px 0px 0px 0px; background-image:url('images/bonus.png'); background-repeat:no-repeat; background-position:right; width:237px; background-color:#333; color:#EEE; border:solid 1px #FFF" />
+		<input type="button" name="b_item_#diskonid#" id="b_item_#diskonid#" value="Konfigurasi Diskon BQ/TQ" class="#opsi_tampilan-pilih-free# kuning" onclick="pilih_item_free_bqtq(#diskonid#)" style="float:right; margin:0px 0px 0px 0px; background-image:url('images/bonus.png'); background-repeat:no-repeat; background-position:right; width:237px; background-color:#333; color:#EEE; border:solid 1px #FFF" />
+		
+		<div class="daftar_item" style="float:left; width:100%">
+			#daftar_item#
+			<input type="hidden" name="hd_item_#diskonid#" id="hd_item_#diskonid#" />
+		</div>
+		
+		<div class="keterangan_diskon">
+			<div style="float:left; margin-top:1px">Keterangan (max 50 karakter)</div>
+			<textarea name="t_discket_#diskonid#" id="t_discket_#diskonid#" class="readonly-input" style="height:47px">#diskon-keterangan#</textarea>
+		</div>
+		<div class="daftar_lampiran">
+			Lampiran<br />
+			<input type="file" name="f_#diskonid#" id="f_#diskonid#" value="Pilih Data" style="width:100%; margin-top:7px" />
+			<div style="display:#display_lampiran#"><a href="javascript:window.open('#url_lampiran#'); void(0)">#data_lampiran#</a></div>
+		</div>
+		<div style="border-top:1px; margin-top:3px">
+			Persetujuan melalui : #persetujuan-melalui#
+			<span style="display:#display-persetujuan#"><br />
+				Status persetujuan : #status-persetujuan#<br />
+				Tanggal persetujuan : #tanggal-persetujuan#<br />
+				Keterangan persetujuan : #keterangan-persetujuan#
+			</span>
+		</div>
+		
+		<div class="checkbox_terapkandiskon" style="border-top:1px; margin-top:3px">
+			<input type="checkbox" name="cb_#diskonid#" id="cb_#diskonid#" value="#diskonid#" #checked-cb# onclick="ubah_warna(#diskonid#)" />
+			<label for="cb_#diskonid#">Terapkan tambahan diskon.</label>
+		</div>
+		
+	</div>
+</div>
